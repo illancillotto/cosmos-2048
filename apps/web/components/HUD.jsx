@@ -25,7 +25,9 @@ export default function HUD({
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-4xl font-bold text-purple-600">Cosmos 2048</h1>
+        <h1 className="text-4xl font-display font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-glow animate-float">
+          Cosmos 2048
+        </h1>
         
         <div className="flex gap-4">
           <div className="bg-gray-800 text-white px-4 py-2 rounded-lg text-center min-w-20">

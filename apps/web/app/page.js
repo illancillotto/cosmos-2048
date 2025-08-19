@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import HUD from '../components/HUD';
 import Leaderboard from '../components/Leaderboard';
 import BadgeGallery from '../components/BadgeGallery';
+import TokenLegend from '../components/TokenLegend';
 import GameOverModal from '../components/GameOverModal';
 import { initializeGame, move, canMove, hasWon, spawnRandomTile } from '../lib/game2048';
 import { getTileData, getTileAnimationClass } from '../lib/cosmosMap';
@@ -22,6 +23,10 @@ function GameComponent() {
   // Touch handling for mobile
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  
+  // Animation states
+  const [newTilePosition, setNewTilePosition] = useState(null);
+  const [mergedPositions, setMergedPositions] = useState([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -185,16 +190,31 @@ function GameComponent() {
     }
   };
 
-  const getTileStyle = (value) => {
+  const getTileStyle = (value, rowIndex, colIndex) => {
     const tileData = getTileData(value);
     const animationClass = getTileAnimationClass(value);
-    const baseClasses = `game-tile w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-lg flex items-center justify-center font-bold text-white shadow-lg cursor-pointer transition-all duration-200 transform hover:scale-105 ${animationClass}`;
+    const glowClass = tileData.glow || 'shadow-gray-500/50';
+    const specialGlow = tileData.special ? 'shadow-2xl' : 'shadow-xl';
+    
+    // Check if this position just had a new tile spawned
+    const isNewTile = newTilePosition && 
+                      newTilePosition.row === rowIndex && 
+                      newTilePosition.col === colIndex;
+    
+    // Check if this position just had a merge
+    const isMerged = mergedPositions.some(pos => 
+                     pos.row === rowIndex && pos.col === colIndex);
+    
+    const spawnAnimation = isNewTile ? 'animate-tile-spawn' : '';
+    const mergeAnimation = isMerged ? 'animate-tile-merge' : '';
+    
+    const baseClasses = `game-tile aspect-square w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-xl flex items-center justify-center font-bold text-white ${specialGlow} ${glowClass} cursor-pointer transition-all duration-300 transform hover:scale-110 hover:rotate-1 border border-white/20 ${animationClass} ${spawnAnimation} ${mergeAnimation}`;
     
     if (value === 0) {
-      return `${baseClasses} bg-gray-300`;
+      return `${baseClasses} bg-gray-900/20 backdrop-blur-md border-gray-500/30`;
     }
     
-    return `${baseClasses} text-xs sm:text-sm lg:text-base`;
+    return `${baseClasses} text-sm sm:text-base lg:text-lg xl:text-xl text-shadow-lg`;
   };
 
   if (!board) {
@@ -206,12 +226,12 @@ function GameComponent() {
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-2 sm:p-4 font-cosmic relative">
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Mobile-first responsive layout */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-8">
           {/* Game Panel - Full width on mobile, spans 2 cols on desktop */}
-          <div className="xl:col-span-2 bg-white rounded-lg shadow-xl p-3 sm:p-6">
+          <div className="xl:col-span-2 glass rounded-2xl shadow-2xl p-3 sm:p-6 border border-white/20">
             <HUD
               score={score}
               best={best}
@@ -223,44 +243,57 @@ function GameComponent() {
             />
 
             {/* Responsive game board */}
-            <div 
-              className="game-board bg-gradient-to-br from-gray-300 to-gray-400 p-2 sm:p-4 rounded-xl inline-block mx-auto shadow-inner touch-none"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className="grid grid-cols-4 gap-1 sm:gap-2">
+            <div className="flex justify-center mt-6">
+              <div 
+                className="game-board bg-gradient-to-br from-gray-800/20 to-gray-900/30 backdrop-blur-sm p-3 sm:p-4 md:p-6 rounded-2xl shadow-2xl border border-white/10 touch-none max-w-fit"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                 {board.map((row, rowIndex) =>
                   row.map((cell, colIndex) => {
                     const tileData = getTileData(cell);
                     return (
                       <div
                         key={`${rowIndex}-${colIndex}`}
-                        className={getTileStyle(cell)}
+                        className={getTileStyle(cell, rowIndex, colIndex)}
                         style={{
                           background: cell === 0 ? '#D1D5DB' : tileData.gradient || tileData.color,
                           color: cell === 0 ? '#6B7280' : 'white'
                         }}
                       >
                         {cell === 0 ? '' : (
-                          <div className="text-center">
-                            <div className="text-xs sm:text-sm opacity-75">{tileData.emoji}</div>
-                            <div className="font-bold text-xs sm:text-base">{cell}</div>
-                            <div className="text-xs opacity-60 hidden sm:block">{tileData.name}</div>
+                          <div className="text-center flex flex-col items-center justify-center h-full space-y-1">
+                            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl drop-shadow-lg">
+                              {tileData.emoji}
+                            </div>
+                            <div className="text-xs sm:text-sm md:text-base font-extrabold tracking-wide drop-shadow-md">
+                              {tileData.name}
+                            </div>
+                            <div className="text-xs opacity-80 font-medium">
+                              {cell}
+                            </div>
                           </div>
                         )}
                       </div>
                     );
                   })
                 )}
+                </div>
               </div>
             </div>
 
             {/* Game instructions - responsive text */}
-            <div className="mt-4 text-center text-gray-600 text-xs sm:text-sm space-y-1">
+            <div className="mt-6 text-center text-gray-600 text-xs sm:text-sm space-y-1">
               <p>🎮 <span className="hidden sm:inline">Use arrow keys to move tiles</span><span className="sm:hidden">Swipe or use arrow keys</span></p>
               <p>🌌 Reach <strong>2048</strong> to win the Cosmos!</p>
               <p>🎰 Connect Keplr wallet for NFT rewards!</p>
+            </div>
+
+            {/* Token Legend - Mobile */}
+            <div className="mt-6 xl:hidden">
+              <TokenLegend />
             </div>
           </div>
 
@@ -268,6 +301,10 @@ function GameComponent() {
           <div className="space-y-4 lg:space-y-8">
             <Leaderboard />
             <BadgeGallery />
+            {/* Token Legend - Desktop */}
+            <div className="hidden xl:block">
+              <TokenLegend />
+            </div>
           </div>
         </div>
       </div>

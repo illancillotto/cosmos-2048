@@ -2,86 +2,100 @@ export const cosmosTokenMap = {
   2: { 
     name: 'ATOM', 
     emoji: '⚛️', 
-    color: '#2E3440',
-    gradient: 'linear-gradient(135deg, #2E3440 0%, #3B4252 100%)',
+    color: '#00D4FF',
+    gradient: 'linear-gradient(135deg, #00D4FF 0%, #0099CC 50%, #006699 100%)',
+    glow: 'shadow-cyan-500/50',
     description: 'Cosmos Hub native token'
   },
   4: { 
     name: 'OSMO', 
     emoji: '🧪', 
-    color: '#722CF1',
-    gradient: 'linear-gradient(135deg, #722CF1 0%, #A855F7 100%)',
+    color: '#9945FF',
+    gradient: 'linear-gradient(135deg, #9945FF 0%, #7C3AED 50%, #5B21B6 100%)',
+    glow: 'shadow-purple-500/50',
     description: 'Osmosis DEX token'
   },
   8: { 
     name: 'JUNO', 
     emoji: '🌀', 
-    color: '#F0827D',
-    gradient: 'linear-gradient(135deg, #F0827D 0%, #FB7185 100%)',
+    color: '#FF6B9D',
+    gradient: 'linear-gradient(135deg, #FF6B9D 0%, #F43F5E 50%, #DC2626 100%)',
+    glow: 'shadow-rose-500/50',
     description: 'Juno smart contracts'
   },
   16: { 
     name: 'STARS', 
     emoji: '⭐', 
-    color: '#DB2777',
-    gradient: 'linear-gradient(135deg, #DB2777 0%, #F472B6 100%)',
+    color: '#FF0080',
+    gradient: 'linear-gradient(135deg, #FF0080 0%, #E91E63 50%, #AD1457 100%)',
+    glow: 'shadow-pink-500/50',
     description: 'Stargaze NFT hub'
   },
   32: { 
     name: 'SCRT', 
     emoji: '🔐', 
-    color: '#1F2937',
-    gradient: 'linear-gradient(135deg, #1F2937 0%, #374151 100%)',
+    color: '#4FD1C7',
+    gradient: 'linear-gradient(135deg, #4FD1C7 0%, #14B8A6 50%, #0F766E 100%)',
+    glow: 'shadow-teal-500/50',
     description: 'Secret Network privacy'
   },
   64: { 
     name: 'EVMOS', 
     emoji: '🚀', 
-    color: '#EF4444',
-    gradient: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
+    color: '#FF4E50',
+    gradient: 'linear-gradient(135deg, #FF4E50 0%, #EF4444 50%, #DC2626 100%)',
+    glow: 'shadow-red-500/50',
     description: 'Evmos EVM compatibility'
   },
   128: { 
     name: 'AKT', 
     emoji: '☁️', 
-    color: '#3B82F6',
-    gradient: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)',
+    color: '#4FC3F7',
+    gradient: 'linear-gradient(135deg, #4FC3F7 0%, #3B82F6 50%, #1D4ED8 100%)',
+    glow: 'shadow-blue-500/50',
     description: 'Akash cloud computing'
   },
   256: { 
     name: 'REGEN', 
     emoji: '🌱', 
-    color: '#22C55E',
-    gradient: 'linear-gradient(135deg, #22C55E 0%, #4ADE80 100%)',
+    color: '#4ADE80',
+    gradient: 'linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #15803D 100%)',
+    glow: 'shadow-green-500/50',
     description: 'Regen regenerative economy'
   },
   512: { 
     name: 'CRO', 
     emoji: '💎', 
-    color: '#1D4ED8',
-    gradient: 'linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%)',
+    color: '#3B82F6',
+    gradient: 'linear-gradient(135deg, #60A5FA 0%, #3B82F6 50%, #1E40AF 100%)',
+    glow: 'shadow-blue-600/50',
     description: 'Crypto.com Chain'
   },
   1024: { 
     name: 'KAVA', 
     emoji: '🔥', 
-    color: '#F59E0B',
-    gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+    color: '#FFB347',
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #F59E0B 50%, #D97706 100%)',
+    glow: 'shadow-amber-500/50',
     description: 'Kava DeFi platform'
   },
   2048: { 
     name: 'COSMOS', 
     emoji: '🌌', 
-    color: '#8B5CF6',
-    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-    description: 'Internet of Blockchains'
+    color: '#A855F7',
+    gradient: 'linear-gradient(135deg, #C084FC 0%, #A855F7 30%, #9333EA 70%, #7C3AED 100%)',
+    glow: 'shadow-purple-600/70',
+    description: 'Internet of Blockchains',
+    special: true
   },
   4096: { 
     name: 'INFINITY', 
     emoji: '♾️', 
-    color: '#F472B6',
-    gradient: 'linear-gradient(135deg, #F472B6 0%, #F9A8D4 100%)',
-    description: 'Beyond the cosmos!'
+    color: '#FF10F0',
+    gradient: 'linear-gradient(135deg, #FF10F0 0%, #C026D3 25%, #A21CAF 50%, #86198F 75%, #701A75 100%)',
+    glow: 'shadow-fuchsia-500/80',
+    description: 'Beyond the cosmos!',
+    special: true
   }
 };
 
@@ -97,8 +111,10 @@ export const getTileData = (value) => {
 
 // Get tile animation class based on value
 export const getTileAnimationClass = (value) => {
-  if (value >= 2048) return 'animate-pulse';
-  if (value >= 1024) return 'animate-bounce';
+  if (value >= 4096) return 'animate-cosmic-pulse cosmic-glow';
+  if (value >= 2048) return 'animate-glow';
+  if (value >= 1024) return 'animate-float';
+  if (value >= 512) return 'animate-pulse';
   return '';
 };
 
