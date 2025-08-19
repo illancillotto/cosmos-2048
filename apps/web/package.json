@@ -11,7 +11,15 @@
   "dependencies": {
     "next": "14.0.4",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "@cosmjs/cosmwasm-stargate": "^0.32.2",
+    "@cosmjs/stargate": "^0.32.2",
+    "@cosmjs/amino": "^0.32.2",
+    "@cosmjs/crypto": "^0.32.2",
+    "@cosmjs/encoding": "^0.32.2",
+    "@cosmjs/proto-signing": "^0.32.2",
+    "@keplr-wallet/types": "^0.12.82",
+    "framer-motion": "^10.16.5"
   },
   "devDependencies": {
     "eslint": "^8",

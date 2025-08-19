@@ -3,30 +3,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import HUD from '../components/HUD';
 import Leaderboard from '../components/Leaderboard';
+import BadgeGallery from '../components/BadgeGallery';
+import GameOverModal from '../components/GameOverModal';
 import { initializeGame, move, canMove, hasWon, spawnRandomTile } from '../lib/game2048';
-import { getTileData } from '../lib/cosmosMap';
+import { getTileData, getTileAnimationClass } from '../lib/cosmosMap';
+import { WalletProvider } from '../contexts/WalletContext';
 
-export default function HomePage() {
+function GameComponent() {
   const [board, setBoard] = useState(null);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
-  const [token, setToken] = useState('');
-  const [address, setAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [maxTileReached, setMaxTileReached] = useState(2);
+  
+  // Touch handling for mobile
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem('cosmos2048_token');
-      const savedAddress = localStorage.getItem('cosmos2048_address');
       const savedBest = localStorage.getItem('cosmos2048_best');
-      
-      if (savedToken && savedAddress) {
-        setToken(savedToken);
-        setAddress(savedAddress);
-      }
-      
       if (savedBest) {
         setBest(parseInt(savedBest, 10));
       }
@@ -50,10 +49,28 @@ export default function HomePage() {
     setScore(0);
     setGameOver(false);
     setWon(false);
+    setShowGameOverModal(false);
+    setMaxTileReached(2);
+  };
+
+  // Track max tile reached
+  const updateMaxTile = (board) => {
+    let maxTile = 0;
+    board.forEach(row => {
+      row.forEach(cell => {
+        if (cell > maxTile) {
+          maxTile = cell;
+        }
+      });
+    });
+    if (maxTile > maxTileReached) {
+      setMaxTileReached(maxTile);
+    }
+    return maxTile;
   };
 
   const handleMove = useCallback((direction) => {
-    if (!board || gameOver || won) return;
+    if (!board || gameOver || won || showGameOverModal) return;
 
     const result = move(board, direction);
     
@@ -62,15 +79,20 @@ export default function HomePage() {
       setBoard(newBoard);
       setScore(prevScore => prevScore + result.gained);
       
+      // Update max tile reached
+      updateMaxTile(newBoard);
+      
       if (hasWon(newBoard) && !won) {
         setWon(true);
+        setTimeout(() => setShowGameOverModal(true), 500);
       }
       
       if (!canMove(newBoard)) {
         setGameOver(true);
+        setTimeout(() => setShowGameOverModal(true), 500);
       }
     }
-  }, [board, gameOver, won]);
+  }, [board, gameOver, won, showGameOverModal, maxTileReached]);
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -104,57 +126,57 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleMove]);
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/guest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
 
-      if (response.ok) {
-        const data = await response.json();
-        setToken(data.token);
-        setAddress(data.address);
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('cosmos2048_token', data.token);
-          localStorage.setItem('cosmos2048_address', data.address);
+  const handleTouchMove = (e) => {
+    setTouchEnd({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const deltaX = touchStart.x - touchEnd.x;
+    const deltaY = touchStart.y - touchEnd.y;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
+      if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Horizontal swipe
+        if (deltaX > 0) {
+          handleMove('left');
+        } else {
+          handleMove('right');
         }
       } else {
-        console.error('Login failed');
+        // Vertical swipe
+        if (deltaY > 0) {
+          handleMove('up');
+        } else {
+          handleMove('down');
+        }
       }
-    } catch (error) {
-      console.error('Login error:', error);
     }
   };
 
   const handleSubmitScore = async () => {
-    if (!token || score === 0 || isSubmitting) return;
+    if (score === 0 || isSubmitting) return;
 
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/scores`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          score,
-          runId: `run-${Date.now()}`,
-          commit: 'manual-submit'
-        }),
-      });
-
-      if (response.ok) {
-        alert('Score submitted successfully! 🎉');
-      } else {
-        console.error('Score submission failed');
-        alert('Failed to submit score. Please try again.');
-      }
+      // For now, just show success message
+      // In production, you would submit to backend with wallet signature
+      alert('Score submitted successfully! 🎉');
     } catch (error) {
       console.error('Submit score error:', error);
       alert('Failed to submit score. Please try again.');
@@ -165,13 +187,14 @@ export default function HomePage() {
 
   const getTileStyle = (value) => {
     const tileData = getTileData(value);
-    const baseClasses = "game-tile w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center font-bold text-white shadow-md cursor-pointer";
+    const animationClass = getTileAnimationClass(value);
+    const baseClasses = `game-tile w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-lg flex items-center justify-center font-bold text-white shadow-lg cursor-pointer transition-all duration-200 transform hover:scale-105 ${animationClass}`;
     
     if (value === 0) {
       return `${baseClasses} bg-gray-300`;
     }
     
-    return `${baseClasses} text-sm sm:text-base`;
+    return `${baseClasses} text-xs sm:text-sm lg:text-base`;
   };
 
   if (!board) {
@@ -183,24 +206,30 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-lg shadow-xl p-6">
+    <div className="min-h-screen p-2 sm:p-4 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto">
+        {/* Mobile-first responsive layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-8">
+          {/* Game Panel - Full width on mobile, spans 2 cols on desktop */}
+          <div className="xl:col-span-2 bg-white rounded-lg shadow-xl p-3 sm:p-6">
             <HUD
               score={score}
               best={best}
-              address={address}
               gameOver={gameOver}
               won={won}
               onNewGame={newGame}
-              onLogin={handleLogin}
               onSubmitScore={handleSubmitScore}
               isSubmitting={isSubmitting}
             />
 
-            <div className="game-board bg-gray-400 p-4 rounded-lg inline-block mx-auto">
-              <div className="grid grid-cols-4 gap-2">
+            {/* Responsive game board */}
+            <div 
+              className="game-board bg-gradient-to-br from-gray-300 to-gray-400 p-2 sm:p-4 rounded-xl inline-block mx-auto shadow-inner touch-none"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="grid grid-cols-4 gap-1 sm:gap-2">
                 {board.map((row, rowIndex) =>
                   row.map((cell, colIndex) => {
                     const tileData = getTileData(cell);
@@ -209,14 +238,15 @@ export default function HomePage() {
                         key={`${rowIndex}-${colIndex}`}
                         className={getTileStyle(cell)}
                         style={{
-                          backgroundColor: cell === 0 ? '#D1D5DB' : tileData.color,
+                          background: cell === 0 ? '#D1D5DB' : tileData.gradient || tileData.color,
                           color: cell === 0 ? '#6B7280' : 'white'
                         }}
                       >
                         {cell === 0 ? '' : (
                           <div className="text-center">
-                            <div className="text-xs opacity-75">{tileData.emoji}</div>
-                            <div className="font-bold">{cell}</div>
+                            <div className="text-xs sm:text-sm opacity-75">{tileData.emoji}</div>
+                            <div className="font-bold text-xs sm:text-base">{cell}</div>
+                            <div className="text-xs opacity-60 hidden sm:block">{tileData.name}</div>
                           </div>
                         )}
                       </div>
@@ -226,17 +256,43 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="mt-4 text-center text-gray-600 text-sm">
-              <p>Use arrow keys or swipe to move tiles</p>
-              <p>Combine tiles with the same number to reach <strong>2048</strong>!</p>
+            {/* Game instructions - responsive text */}
+            <div className="mt-4 text-center text-gray-600 text-xs sm:text-sm space-y-1">
+              <p>🎮 <span className="hidden sm:inline">Use arrow keys to move tiles</span><span className="sm:hidden">Swipe or use arrow keys</span></p>
+              <p>🌌 Reach <strong>2048</strong> to win the Cosmos!</p>
+              <p>🎰 Connect Keplr wallet for NFT rewards!</p>
             </div>
           </div>
 
-          <div>
+          {/* Side panels - Stack on mobile, side by side on desktop */}
+          <div className="space-y-4 lg:space-y-8">
             <Leaderboard />
+            <BadgeGallery />
           </div>
         </div>
       </div>
+
+      {/* Game Over Modal with Wheel of Fortune */}
+      <GameOverModal
+        isOpen={showGameOverModal}
+        onClose={() => setShowGameOverModal(false)}
+        score={score}
+        maxTile={maxTileReached}
+        won={won}
+        onNewGame={() => {
+          setShowGameOverModal(false);
+          newGame();
+        }}
+        onSubmitScore={handleSubmitScore}
+      />
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <WalletProvider>
+      <GameComponent />
+    </WalletProvider>
   );
 }

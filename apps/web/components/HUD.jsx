@@ -1,16 +1,27 @@
 'use client';
 
+import { useWallet } from '../contexts/WalletContext';
+
 export default function HUD({ 
   score, 
   best, 
-  address, 
   gameOver, 
   won,
   onNewGame, 
-  onLogin, 
   onSubmitScore,
   isSubmitting 
 }) {
+  const { 
+    isConnected, 
+    address, 
+    balance, 
+    isConnecting, 
+    connect, 
+    disconnect, 
+    formatAddress, 
+    isKeplrAvailable,
+    error 
+  } = useWallet();
   return (
     <div className="flex flex-col gap-4 mb-6">
       <div className="flex justify-between items-center">
@@ -28,9 +39,34 @@ export default function HUD({
         </div>
       </div>
 
-      {address && (
-        <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-sm">
-          Playing as: <span className="font-mono">{address}</span>
+      {/* Wallet Status */}
+      {isConnected ? (
+        <div className="space-y-2">
+          <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm flex items-center justify-between">
+            <div>
+              <span className="font-semibold">🌟 {formatAddress(address)}</span>
+              <div className="text-xs text-green-600">{balance.toFixed(2)} STARS</div>
+            </div>
+            <button
+              onClick={disconnect}
+              className="text-green-600 hover:text-green-800 text-xs underline"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {!isKeplrAvailable && (
+            <div className="bg-red-100 text-red-800 px-3 py-2 rounded-lg text-sm">
+              ⚠️ Keplr wallet not detected. <a href="https://keplr.app" target="_blank" rel="noopener noreferrer" className="underline">Install Keplr</a>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-100 text-red-800 px-3 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
         </div>
       )}
 
@@ -39,26 +75,36 @@ export default function HUD({
           onClick={onNewGame}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
         >
-          New Game
+          🎮 New Game
         </button>
         
-        {!address && (
+        {!isConnected ? (
           <button
-            onClick={onLogin}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+            onClick={connect}
+            disabled={isConnecting || !isKeplrAvailable}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
           >
-            Login Guest
+            {isConnecting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Connecting...</span>
+              </>
+            ) : (
+              <>
+                <span>🔗 Connect Keplr</span>
+              </>
+            )}
           </button>
-        )}
-        
-        {address && score > 0 && (
-          <button
-            onClick={onSubmitScore}
-            disabled={isSubmitting}
-            className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Score'}
-          </button>
+        ) : (
+          score > 0 && (
+            <button
+              onClick={onSubmitScore}
+              disabled={isSubmitting}
+              className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+            >
+              {isSubmitting ? 'Submitting...' : '📊 Submit Score'}
+            </button>
+          )
         )}
       </div>
 
