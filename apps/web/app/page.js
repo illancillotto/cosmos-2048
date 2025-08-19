@@ -319,6 +319,44 @@ function GameComponent() {
                 </div>
               </div>
               
+              {/* Simple Token Legend for Mobile */}
+              <div className="mt-8 lg:hidden">
+                <motion.div 
+                  className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                >
+                  <h3 className="text-xl font-bold text-white mb-4 text-center">🎯 Token Legend</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { value: 2, emoji: '⚛️', name: 'ATOM' },
+                      { value: 4, emoji: '🧪', name: 'OSMO' },
+                      { value: 8, emoji: '🌀', name: 'JUNO' },
+                      { value: 16, emoji: '⭐', name: 'STARS' },
+                      { value: 32, emoji: '🔐', name: 'SCRT' },
+                      { value: 64, emoji: '🚀', name: 'EVMOS' },
+                      { value: 128, emoji: '☁️', name: 'AKT' },
+                      { value: 256, emoji: '🌱', name: 'REGEN' }
+                    ].map((token) => (
+                      <div 
+                        key={token.value}
+                        className="flex flex-col items-center p-3 bg-white/20 rounded-xl border border-white/30"
+                      >
+                        <div className="text-2xl mb-1">{token.emoji}</div>
+                        <div className="text-sm font-semibold text-white">{token.value}</div>
+                        <div className="text-xs text-white/70 text-center">{token.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-white/60">
+                      💎 Higher values unlock rare tokens and NFT badges!
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+              
               {/* Game Status */}
               <AnimatePresence>
                 {(gameOver || won) && (
