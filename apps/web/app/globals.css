@@ -11,7 +11,6 @@ body {
   background: 
     radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%),
     linear-gradient(135deg, #0f0c29 0%, #302b63 25%, #24243e 50%, #0f0c29 100%);
   background-size: 400% 400%;
   animation: gradient-shift 15s ease infinite;
@@ -25,7 +24,7 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* Add starfield effect */
+/* Starfield effect */
 body::before {
   content: '';
   position: fixed;
@@ -36,9 +35,7 @@ body::before {
   background-image: 
     radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.8), transparent),
     radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
-    radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 160px 30px, rgba(255,255,255,0.5), transparent);
+    radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent);
   background-repeat: repeat;
   background-size: 200px 100px;
   animation: stars-twinkle 10s linear infinite;
@@ -51,51 +48,31 @@ body::before {
   to { transform: translateX(-200px); }
 }
 
-.game-tile {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Game Board Styles */
+.game-board {
+  user-select: none;
   position: relative;
   z-index: 1;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(20px);
+}
+
+/* Game Tile Styles */
+.game-tile {
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .game-tile:hover {
-  transform: scale(1.1) rotate(1deg);
-}
-
-.game-board {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  position: relative;
-  z-index: 1;
-}
-
-/* Cosmic glow effect for special tiles */
-.cosmic-glow {
-  position: relative;
-}
-
-.cosmic-glow::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
-  border-radius: inherit;
-  z-index: -1;
-  animation: cosmic-pulse 2s ease-in-out infinite;
-  opacity: 0.7;
-}
-
-/* Text shadow utilities */
-.text-shadow-lg {
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.text-shadow-glow {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Custom scrollbar */
@@ -124,8 +101,200 @@ body::before {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Enhanced focus states */
+/* Focus states */
 .focus-cosmic:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.5);
+}
+
+/* TokenLegend Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.7) rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8b5cf6, #ec4899);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #7c3aed, #db2777);
+}
+
+/* Basic animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient text utilities */
+.gradient-text-purple {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shadows */
+.shadow-cosmic {
+  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.15);
+}
+
+.shadow-cosmic-hover:hover {
+  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.25);
+}
+
+/* Game animations */
+@keyframes tile-spawn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes tile-merge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.animate-tile-spawn {
+  animation: tile-spawn 0.4s ease;
+}
+
+.animate-tile-merge {
+  animation: tile-merge 0.3s ease;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .game-board {
+    padding: 1rem;
+    max-width: 100%;
+  }
+  
+  .game-tile {
+    min-width: 4rem;
+    min-height: 4rem;
+  }
+  
+  .game-tile .text-4xl { font-size: 1.5rem; }
+  .game-tile .text-5xl { font-size: 1.75rem; }
+  .game-tile .text-6xl { font-size: 2rem; }
+  .game-tile .text-7xl { font-size: 2.25rem; }
+  .game-tile .text-8xl { font-size: 2.5rem; }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .game-board {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+  
+  .game-tile .text-4xl { font-size: 2rem; }
+  .game-tile .text-5xl { font-size: 2.25rem; }
+  .game-tile .text-6xl { font-size: 2.5rem; }
+  .game-tile .text-7xl { font-size: 2.75rem; }
+  .game-tile .text-8xl { font-size: 3rem; }
+}
+
+@media (min-width: 769px) {
+  .game-board {
+    padding: 2rem;
+    max-width: 80%;
+  }
+}
+
+/* Grid gap responsiveness */
+@media (min-width: 640px) {
+  .grid.grid-cols-4 { gap: 1rem; }
+}
+
+@media (min-width: 768px) {
+  .grid.grid-cols-4 { gap: 1.25rem; }
+}
+
+@media (min-width: 1024px) {
+  .grid.grid-cols-4 { gap: 1.5rem; }
+}
+
+/* Tile styling */
+.game-tile .text-3xl,
+.game-tile .text-4xl,
+.game-tile .text-5xl,
+.game-tile .text-6xl,
+.game-tile .text-7xl,
+.game-tile .text-8xl {
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.game-tile:empty,
+.game-tile[data-value="0"] {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.game-tile:not([data-value="0"]) {
+  background: linear-gradient(135deg, var(--tile-color, #8b5cf6), var(--tile-color-secondary, #ec4899));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.focus-visible:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }

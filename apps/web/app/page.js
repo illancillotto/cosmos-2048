@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import HUD from '../components/HUD';
 import Leaderboard from '../components/Leaderboard';
 import BadgeGallery from '../components/BadgeGallery';
@@ -56,6 +57,8 @@ function GameComponent() {
     setWon(false);
     setShowGameOverModal(false);
     setMaxTileReached(2);
+    setNewTilePosition(null);
+    setMergedPositions([]);
   };
 
   // Track max tile reached
@@ -131,202 +134,238 @@ function GameComponent() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleMove]);
 
-  // Touch handlers for mobile swipe
+  // Touch handling for mobile
   const handleTouchStart = (e) => {
-    setTouchEnd(null);
     setTouchStart({
       x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY,
+      y: e.targetTouches[0].clientY
     });
   };
 
   const handleTouchMove = (e) => {
     setTouchEnd({
       x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY,
+      y: e.targetTouches[0].clientY
     });
   };
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     
-    const deltaX = touchStart.x - touchEnd.x;
-    const deltaY = touchStart.y - touchEnd.y;
-    const minSwipeDistance = 50;
-
-    if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Horizontal swipe
-        if (deltaX > 0) {
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+    
+    if (isHorizontalSwipe) {
+      if (Math.abs(distanceX) > 50) {
+        if (distanceX > 0) {
           handleMove('left');
         } else {
           handleMove('right');
         }
-      } else {
-        // Vertical swipe
-        if (deltaY > 0) {
+      }
+    } else {
+      if (Math.abs(distanceY) > 50) {
+        if (distanceY > 0) {
           handleMove('up');
         } else {
           handleMove('down');
         }
       }
     }
+    
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   const handleSubmitScore = async () => {
-    if (score === 0 || isSubmitting) return;
-
-    setIsSubmitting(true);
+    if (score === 0) return;
     
+    setIsSubmitting(true);
     try {
-      // For now, just show success message
-      // In production, you would submit to backend with wallet signature
-      alert('Score submitted successfully! 🎉');
+      const response = await fetch('/api/scores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          score,
+          maxTile: maxTileReached,
+          gameData: {
+            address: 'guest',
+            timestamp: new Date().toISOString()
+          }
+        }),
+      });
+      
+      if (response.ok) {
+        console.log('Score submitted successfully');
+      } else {
+        console.error('Failed to submit score');
+      }
     } catch (error) {
-      console.error('Submit score error:', error);
-      alert('Failed to submit score. Please try again.');
+      console.error('Error submitting score:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getTileStyle = (value, rowIndex, colIndex) => {
-    const tileData = getTileData(value);
-    const animationClass = getTileAnimationClass(value);
-    const glowClass = tileData.glow || 'shadow-gray-500/50';
-    const specialGlow = tileData.special ? 'shadow-2xl' : 'shadow-xl';
-    
-    // Check if this position just had a new tile spawned
-    const isNewTile = newTilePosition && 
-                      newTilePosition.row === rowIndex && 
-                      newTilePosition.col === colIndex;
-    
-    // Check if this position just had a merge
-    const isMerged = mergedPositions.some(pos => 
-                     pos.row === rowIndex && pos.col === colIndex);
-    
-    const spawnAnimation = isNewTile ? 'animate-tile-spawn' : '';
-    const mergeAnimation = isMerged ? 'animate-tile-merge' : '';
-    
-    const baseClasses = `game-tile aspect-square w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 rounded-xl flex items-center justify-center font-bold text-white ${specialGlow} ${glowClass} cursor-pointer transition-all duration-300 transform hover:scale-110 hover:rotate-1 border border-white/20 ${animationClass} ${spawnAnimation} ${mergeAnimation}`;
-    
-    if (value === 0) {
-      return `${baseClasses} bg-gray-900/20 backdrop-blur-md border-gray-500/30`;
-    }
-    
-    return `${baseClasses} text-sm sm:text-base lg:text-lg xl:text-xl text-shadow-lg`;
-  };
-
   if (!board) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <motion.div 
+          className="text-4xl font-bold text-white"
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Loading Cosmos 2048...
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4 font-cosmic relative">
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Mobile-first responsive layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-8">
-          {/* Game Panel - Full width on mobile, spans 2 cols on desktop */}
-          <div className="xl:col-span-2 glass rounded-2xl shadow-2xl p-3 sm:p-6 border border-white/20">
-            <HUD
-              score={score}
-              best={best}
-              gameOver={gameOver}
-              won={won}
-              onNewGame={newGame}
-              onSubmitScore={handleSubmitScore}
-              isSubmitting={isSubmitting}
-            />
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
+      
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        <HUD 
+          score={score}
+          best={best}
+          gameOver={gameOver}
+          won={won}
+          onNewGame={newGame}
+          onSubmitScore={handleSubmitScore}
+          isSubmitting={isSubmitting}
+        />
 
-            {/* Responsive game board */}
-            <div className="flex justify-center mt-6">
+        {/* Enhanced Game Board */}
+        <motion.div 
+          className="flex flex-col lg:flex-row gap-8 items-center justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+        >
+          {/* Main Game Area */}
+          <div className="flex-1 max-w-5xl mx-auto">
+            <motion.div 
+              className="bg-white/10 backdrop-blur-xl rounded-3xl p-10 border border-white/20 shadow-2xl"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="text-center mb-10">
+                <h2 className="text-5xl font-bold text-white mb-4 text-glow-purple">Cosmos 2048</h2>
+                <p className="text-white/70 text-xl">Swipe or use arrow keys to play</p>
+              </div>
+              
               <div 
-                className="game-board bg-gradient-to-br from-gray-800/20 to-gray-900/30 backdrop-blur-sm p-3 sm:p-4 md:p-6 rounded-2xl shadow-2xl border border-white/10 touch-none max-w-fit"
+                className="game-board bg-white/20 backdrop-blur-sm rounded-3xl p-8 mx-auto max-w-3xl"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
-                <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-                {board.map((row, rowIndex) =>
-                  row.map((cell, colIndex) => {
-                    const tileData = getTileData(cell);
-                    return (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        className={getTileStyle(cell, rowIndex, colIndex)}
-                        style={{
-                          background: cell === 0 ? '#D1D5DB' : tileData.gradient || tileData.color,
-                          color: cell === 0 ? '#6B7280' : 'white'
-                        }}
-                      >
-                        {cell === 0 ? '' : (
-                          <div className="text-center flex flex-col items-center justify-center h-full space-y-1">
-                            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl drop-shadow-lg">
-                              {tileData.emoji}
-                            </div>
-                            <div className="text-xs sm:text-sm md:text-base font-extrabold tracking-wide drop-shadow-md">
-                              {tileData.name}
-                            </div>
-                            <div className="text-xs opacity-80 font-medium">
-                              {cell}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
+                <div className="grid grid-cols-4 gap-5">
+                  {board.map((row, rowIndex) =>
+                    row.map((cell, colIndex) => {
+                      const tileData = getTileData(cell);
+                      const isNew = newTilePosition && 
+                        newTilePosition.row === rowIndex && 
+                        newTilePosition.col === colIndex;
+                      const isMerged = mergedPositions.some(pos => 
+                        pos.row === rowIndex && pos.col === colIndex
+                      );
+                      
+                      return (
+                        <motion.div
+                          key={`${rowIndex}-${colIndex}`}
+                          className={`game-tile w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 xl:w-40 xl:h-40 rounded-3xl flex items-center justify-center text-white font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl relative overflow-hidden ${
+                            cell === 0 ? 'bg-white/20' : 'shadow-lg'
+                          }`}
+                          style={{
+                            background: cell === 0 ? 'rgba(255, 255, 255, 0.2)' : tileData.gradient || tileData.color,
+                            border: cell === 0 ? '2px solid rgba(255, 255, 255, 0.3)' : 'none'
+                          }}
+                          initial={isNew ? { scale: 0, rotate: 180 } : { scale: 1 }}
+                          animate={isNew ? { scale: 1, rotate: 0 } : { scale: 1 }}
+                          transition={{ 
+                            duration: isNew ? 0.3 : 0.15,
+                            type: isNew ? "spring" : "easeOut"
+                          }}
+                          whileHover={cell !== 0 ? { scale: 1.08, rotate: 2 } : {}}
+                        >
+                          {cell !== 0 && (
+                            <>
+                              <div className="relative z-10">
+                                <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl mb-3">{tileData.emoji}</div>
+                                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl opacity-90 font-semibold">{cell}</div>
+                              </div>
+                              
+                              {/* Enhanced glow effect for high-value tiles */}
+                              {cell >= 512 && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 rounded-3xl animate-pulse" />
+                              )}
+                              
+                              {/* Shimmer effect for special tiles */}
+                              {cell >= 1024 && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
+                              )}
+                            </>
+                          )}
+                        </motion.div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* Game instructions - responsive text */}
-            <div className="mt-6 text-center text-gray-600 text-xs sm:text-sm space-y-1">
-              <p>🎮 <span className="hidden sm:inline">Use arrow keys to move tiles</span><span className="sm:hidden">Swipe or use arrow keys</span></p>
-              <p>🌌 Reach <strong>2048</strong> to win the Cosmos!</p>
-              <p>🎰 Connect Keplr wallet for NFT rewards!</p>
-            </div>
-
-            {/* Token Legend - Mobile */}
-            <div className="mt-6 xl:hidden">
-              <TokenLegend />
-            </div>
+              
+              {/* Game Status */}
+              <AnimatePresence>
+                {(gameOver || won) && (
+                  <motion.div 
+                    className={`mt-6 p-4 rounded-2xl text-center font-bold text-lg ${
+                      won 
+                        ? 'bg-gradient-to-r from-green-400/20 to-emerald-400/20 text-green-100 border border-green-400/30' 
+                        : 'bg-gradient-to-r from-red-400/20 to-pink-400/20 text-red-100 border border-red-400/30'
+                    }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {won ? '🎉 You reached 2048! You won!' : '💀 Game Over! No more moves available.'}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
 
-          {/* Side panels - Stack on mobile, side by side on desktop */}
-          <div className="space-y-4 lg:space-y-8">
-            <Leaderboard />
+          {/* Sidebar Components */}
+          <div className="w-full lg:w-80 space-y-6">
+            <TokenLegend />
             <BadgeGallery />
-            {/* Token Legend - Desktop */}
-            <div className="hidden xl:block">
-              <TokenLegend />
-            </div>
+            <Leaderboard />
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Game Over Modal with Wheel of Fortune */}
-      <GameOverModal
-        isOpen={showGameOverModal}
-        onClose={() => setShowGameOverModal(false)}
-        score={score}
-        maxTile={maxTileReached}
-        won={won}
-        onNewGame={() => {
-          setShowGameOverModal(false);
-          newGame();
-        }}
-        onSubmitScore={handleSubmitScore}
-      />
+      {/* Enhanced Game Over Modal */}
+      <AnimatePresence>
+        {showGameOverModal && (
+          <GameOverModal
+            score={score}
+            maxTile={maxTileReached}
+            won={won}
+            onClose={() => setShowGameOverModal(false)}
+            onNewGame={newGame}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-export default function HomePage() {
+export default function GamePage() {
   return (
     <WalletProvider>
       <GameComponent />

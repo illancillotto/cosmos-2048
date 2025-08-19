@@ -1,0 +1,250 @@
+# Cosmos 2048 - Comprehensive Git Ignore File
+
+# ===== DEPENDENCIES =====
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager lock files (uncomment if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ===== ENVIRONMENT VARIABLES =====
+# Environment files with sensitive data
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+env.example
+
+# ===== BUILD OUTPUTS =====
+# Next.js build outputs
+.next/
+out/
+dist/
+build/
+
+# Production builds
+*.tgz
+*.tar.gz
+
+# ===== LOGS =====
+# Log files
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===== COVERAGE & TESTING =====
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Jest coverage
+coverage/
+
+# ===== EDITOR & IDE =====
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ===== OPERATING SYSTEM =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===== DOCKER =====
+# Docker files
+.dockerignore
+docker-compose.override.yml
+docker-compose.*.yml
+!docker-compose.yml
+
+# Docker volumes
+docker-volumes/
+
+# ===== DATABASE =====
+# MongoDB
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== CACHE & TEMPORARY FILES =====
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+.temp/
+
+# ===== SECURITY =====
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# ===== MONOREPO =====
+# Lerna
+lerna-debug.log*
+
+# ===== NEXT.JS SPECIFIC =====
+# Next.js
+.next/
+out/
+build/
+
+# PWA files
+**/public/sw.js
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/sw.js.map
+**/public/workbox-*.js.map
+**/public/worker-*.js.map
+
+# ===== COSMOS & BLOCKCHAIN =====
+# Keplr wallet data
+.keplr/
+keplr-config/
+
+# Blockchain data
+blockchain-data/
+chain-data/
+
+# NFT metadata cache
+nft-cache/
+metadata-cache/
+
+# ===== DEVELOPMENT TOOLS =====
+# Storybook
+storybook-static/
+
+# Chromatic
+chromatic.log
+
+# ===== MONITORING & ANALYTICS =====
+# Sentry
+.sentryclirc
+
+# ===== MISCELLANEOUS =====
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# ===== CUSTOM PROJECT FILES =====
+# Local development files
+local/
+dev-data/
+test-data/
+
+# User-specific files
+user-config/
+personal/
+
+# ===== END OF FILE =====
