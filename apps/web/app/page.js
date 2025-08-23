@@ -225,11 +225,11 @@ function GameComponent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-x-hidden">
+      {/* Enhanced Background Effects - Mobile Optimized */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30 sm:opacity-50" />
       
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-2 sm:px-4 py-4 sm:py-6 lg:py-8">
         <HUD 
           score={score}
           best={best}
@@ -240,32 +240,32 @@ function GameComponent() {
           isSubmitting={isSubmitting}
         />
 
-        {/* Enhanced Game Board */}
+        {/* Enhanced Game Board - Mobile Optimized */}
         <motion.div 
-          className="flex flex-col lg:flex-row gap-8 items-start justify-center"
+          className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
-          {/* Main Game Area */}
-          <div className="flex-1 max-w-4xl">
+          {/* Main Game Area - Full width on mobile */}
+          <div className="w-full lg:flex-1 lg:max-w-4xl">
             <motion.div 
-              className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl"
+              className="bg-white/10 backdrop-blur-xl rounded-2xl lg:rounded-3xl p-4 lg:p-8 border border-white/20 shadow-2xl"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="text-center mb-8">
-                <h2 className="text-4xl font-bold text-white mb-3 text-glow-purple">Cosmos 2048</h2>
-                <p className="text-white/70 text-lg">Swipe or use arrow keys to play</p>
+              <div className="text-center mb-4 lg:mb-8">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 lg:mb-3 text-glow-purple">Cosmos 2048</h2>
+                <p className="text-white/70 text-sm sm:text-base lg:text-lg">Swipe or use arrow keys to play</p>
               </div>
               
               <div 
-                className="game-board bg-white/20 backdrop-blur-sm rounded-3xl p-6 mx-auto max-w-2xl"
+                className="game-board bg-white/20 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-3 sm:p-4 lg:p-6 mx-auto w-full max-w-[90vw] sm:max-w-md lg:max-w-2xl"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
                   {board.map((row, rowIndex) =>
                     row.map((cell, colIndex) => {
                       const tileData = getTileData(cell);
@@ -279,7 +279,7 @@ function GameComponent() {
                       return (
                         <motion.div
                           key={`${rowIndex}-${colIndex}`}
-                          className={`game-tile w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-3xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl relative overflow-hidden ${
+                          className={`game-tile aspect-square w-full rounded-xl sm:rounded-2xl lg:rounded-3xl flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base lg:text-xl relative overflow-hidden ${
                             cell === 0 ? 'bg-white/20' : 'shadow-lg'
                           }`}
                           style={{
@@ -296,14 +296,14 @@ function GameComponent() {
                         >
                           {cell !== 0 && (
                             <>
-                              <div className="relative z-10">
-                                <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-2">{tileData.emoji}</div>
-                                <div className="text-sm sm:text-base md:text-lg lg:text-xl opacity-90 font-semibold">{cell}</div>
+                              <div className="relative z-10 flex flex-col items-center justify-center">
+                                <div className="text-lg sm:text-2xl md:text-3xl lg:text-5xl mb-1">{tileData.emoji}</div>
+                                <div className="text-xs sm:text-sm md:text-base lg:text-lg opacity-90 font-semibold">{cell}</div>
                               </div>
                               
                               {/* Enhanced glow effect for high-value tiles */}
                               {cell >= 512 && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 rounded-3xl animate-pulse" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 rounded-xl sm:rounded-2xl lg:rounded-3xl animate-pulse" />
                               )}
                               
                               {/* Shimmer effect for special tiles */}
@@ -319,11 +319,11 @@ function GameComponent() {
                 </div>
               </div>
               
-              {/* Game Status */}
+              {/* Game Status - Mobile Optimized */}
               <AnimatePresence>
                 {(gameOver || won) && (
                   <motion.div 
-                    className={`mt-6 p-4 rounded-2xl text-center font-bold text-lg ${
+                    className={`mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-4 rounded-xl lg:rounded-2xl text-center font-bold text-sm sm:text-base lg:text-lg ${
                       won 
                         ? 'bg-gradient-to-r from-green-400/20 to-emerald-400/20 text-green-100 border border-green-400/30' 
                         : 'bg-gradient-to-r from-red-400/20 to-pink-400/20 text-red-100 border border-red-400/30'
@@ -339,9 +339,9 @@ function GameComponent() {
               </AnimatePresence>
             </motion.div>
             
-            {/* Token Legend directly after game */}
+            {/* Token Legend directly after game - Mobile Spacing */}
             <motion.div 
-              className="mt-8"
+              className="mt-4 lg:mt-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
@@ -350,8 +350,8 @@ function GameComponent() {
             </motion.div>
           </div>
 
-          {/* Sidebar Components - Now only BadgeGallery and Leaderboard */}
-          <div className="w-full lg:w-96 space-y-6">
+          {/* Sidebar Components - Mobile stacked, desktop sidebar */}
+          <div className="w-full lg:w-96 space-y-4 lg:space-y-6">
             <BadgeGallery />
             <Leaderboard />
           </div>

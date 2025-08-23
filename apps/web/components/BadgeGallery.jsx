@@ -35,22 +35,22 @@ const BadgeGallery = () => {
   if (!isConnected) {
     return (
       <motion.div
-        className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 text-center"
+        className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/30 p-4 sm:p-6 lg:p-8 text-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="text-6xl mb-6"
+          className="text-4xl sm:text-5xl lg:text-6xl mb-4 lg:mb-6"
           animate={{ rotate: [0, 10, -10, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           🏆
         </motion.div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent mb-4">
+        <h2 className="text-lg sm:text-xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent mb-3 lg:mb-4">
           Your NFT Badge Collection
         </h2>
-        <div className="text-gray-600 text-lg">
+        <div className="text-gray-600 text-sm sm:text-base lg:text-lg">
           <p>Connect your Keplr wallet to view your NFT badges!</p>
         </div>
       </motion.div>
@@ -59,19 +59,19 @@ const BadgeGallery = () => {
 
   return (
     <motion.div
-      className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8"
+      className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/30 p-4 sm:p-6 lg:p-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
+        <h2 className="text-lg sm:text-xl lg:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
           🏆 Your NFT Badge Collection
         </h2>
         <motion.button
           onClick={fetchUserNFTs}
           disabled={loading}
-          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-cosmic hover:shadow-cosmic-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 lg:px-6 lg:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 shadow-cosmic hover:shadow-cosmic-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start"
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -107,7 +107,7 @@ const BadgeGallery = () => {
 
       {loading && !error ? (
         <motion.div
-          className="text-center py-12"
+          className="text-center py-8 lg:py-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -117,30 +117,30 @@ const BadgeGallery = () => {
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="w-8 h-8 border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-            <span className="text-lg font-medium">Loading your badges...</span>
+            <div className="w-6 h-6 lg:w-8 lg:h-8 border-2 lg:border-3 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+            <span className="text-sm sm:text-base lg:text-lg font-medium">Loading your badges...</span>
           </motion.div>
         </motion.div>
       ) : nfts.length === 0 ? (
         <motion.div
-          className="text-center py-12 space-y-6"
+          className="text-center py-6 sm:py-8 lg:py-12 space-y-4 lg:space-y-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           <motion.div
-            className="text-8xl"
+            className="text-6xl sm:text-7xl lg:text-8xl"
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
             🎮
           </motion.div>
-          <div className="text-gray-600 text-lg">
+          <div className="text-gray-600 text-sm sm:text-base lg:text-lg">
             <p className="font-semibold mb-2">No badges yet!</p>
-            <p className="text-base">Play Cosmos 2048 and spin the wheel to earn NFT badges.</p>
+            <p className="text-sm sm:text-base">Play Cosmos 2048 and spin the wheel to earn NFT badges.</p>
           </div>
           <motion.div
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 text-sm text-gray-700 border border-purple-200/50 max-w-md mx-auto"
+            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 text-xs sm:text-sm text-gray-700 border border-purple-200/50 max-w-full sm:max-w-md mx-auto"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
@@ -154,7 +154,7 @@ const BadgeGallery = () => {
         </motion.div>
       ) : (
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -162,22 +162,22 @@ const BadgeGallery = () => {
           {nfts.map((nft, index) => (
             <motion.div
               key={nft.tokenId || index}
-              className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200/50 rounded-2xl p-6 hover:shadow-cosmic-hover transition-all duration-300 group cursor-pointer"
+              className="bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-200/50 rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 hover:shadow-cosmic-hover transition-all duration-300 group cursor-pointer"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.4 }}
               whileHover={{ scale: 1.05, y: -5 }}
             >
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-2 sm:space-y-3 lg:space-y-4">
                 <motion.div
-                  className="text-5xl"
+                  className="text-3xl sm:text-4xl lg:text-5xl"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
                   {nft.emoji || '🏆'}
                 </motion.div>
-                <h3 className="font-bold text-gray-800 text-lg">{nft.name}</h3>
-                <div className="space-y-2 text-sm">
+                <h3 className="font-bold text-gray-800 text-sm sm:text-base lg:text-lg">{nft.name}</h3>
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Score:</span>
                     <span className="font-semibold text-purple-700">{nft.score?.toLocaleString()}</span>
@@ -204,15 +204,15 @@ const BadgeGallery = () => {
         </motion.div>
       )}
 
-      {/* Enhanced Available Badge Types */}
+      {/* Enhanced Available Badge Types - Mobile Optimized */}
       <motion.div
-        className="mt-12 pt-8 border-t border-gray-200/50"
+        className="mt-6 sm:mt-8 lg:mt-12 pt-4 sm:pt-6 lg:pt-8 border-t border-gray-200/50"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">🎯 Available Badge Types</h3>
-        <div className="space-y-4">
+        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4 lg:mb-6 text-center">🎯 Available Badge Types</h3>
+        <div className="space-y-2 sm:space-y-3 lg:space-y-4">
           {[
             { name: 'Common', emoji: '🥉', color: 'from-gray-400 to-gray-500', rarity: '40%' },
             { name: 'Uncommon', emoji: '🥈', color: 'from-green-400 to-green-500', rarity: '30%' },
@@ -222,22 +222,22 @@ const BadgeGallery = () => {
           ].map((badge, index) => (
             <motion.div
               key={badge.name}
-              className="flex items-center p-4 bg-white rounded-2xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-200 group cursor-pointer"
+              className="flex items-center p-3 lg:p-4 bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-200 group cursor-pointer"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
               whileHover={{ scale: 1.02, x: 5 }}
             >
               <motion.div
-                className="text-5xl mr-4 flex-shrink-0"
+                className="text-3xl sm:text-4xl lg:text-5xl mr-3 lg:mr-4 flex-shrink-0"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
               >
                 {badge.emoji}
               </motion.div>
               <div className="flex-1">
-                <div className="font-bold text-gray-800 text-lg mb-1">{badge.name}</div>
-                <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block font-semibold">
+                <div className="font-bold text-gray-800 text-sm sm:text-base lg:text-lg mb-1">{badge.name}</div>
+                <div className="text-xs sm:text-sm text-gray-600 bg-gray-100 px-2 sm:px-3 py-1 rounded-full inline-block font-semibold">
                   {badge.rarity}
                 </div>
               </div>

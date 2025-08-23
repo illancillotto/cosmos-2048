@@ -49,7 +49,7 @@ const TokenLegend = () => {
 
   return (
     <motion.div
-      className="relative bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden"
+      className="relative bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-xl rounded-2xl lg:rounded-3xl shadow-2xl border border-white/30 overflow-hidden"
       style={{
         transformStyle: 'preserve-3d',
         perspective: '1000px'
@@ -59,9 +59,9 @@ const TokenLegend = () => {
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header with enhanced styling */}
+      {/* Header with enhanced styling - Mobile Optimized */}
       <motion.div
-        className="relative p-6 cursor-pointer group overflow-hidden"
+        className="relative p-4 lg:p-6 cursor-pointer group overflow-hidden"
         onClick={() => setIsExpanded(!isExpanded)}
         whileHover={{ backgroundColor: 'rgba(139, 92, 246, 0.05)' }}
         transition={{ duration: 0.2 }}
@@ -70,36 +70,36 @@ const TokenLegend = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <div className="relative flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
             <motion.div
-              className="relative"
+              className="relative flex-shrink-0"
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">🌌</span>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg">
+                <span className="text-base sm:text-lg lg:text-2xl">🌌</span>
               </div>
               {/* Orbital rings */}
-              <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse" />
+              <div className="absolute inset-0 rounded-xl lg:rounded-2xl border-2 border-purple-300/30 animate-pulse" />
             </motion.div>
 
-            <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg lg:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 bg-clip-text text-transparent truncate">
                 Cosmos Token Evolution
               </h3>
-              <p className="text-gray-600 mt-1 font-medium">Journey through the ecosystem</p>
+              <p className="text-gray-600 text-xs sm:text-sm lg:text-base font-medium hidden sm:block">Journey through the ecosystem</p>
             </div>
           </div>
 
-          {/* Enhanced expand/collapse button */}
+          {/* Enhanced expand/collapse button - Mobile Optimized */}
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.4, type: "spring", stiffness: 200 }}
-            className="relative"
+            className="relative flex-shrink-0"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
               <motion.span
-                className="text-white text-lg"
+                className="text-white text-sm sm:text-base lg:text-lg"
                 animate={{ y: isExpanded ? -2 : 2 }}
                 transition={{ duration: 0.2 }}
               >
@@ -109,7 +109,7 @@ const TokenLegend = () => {
           </motion.div>
         </div>
 
-        {/* Scroll to top button when expanded */}
+        {/* Scroll to top button when expanded - Hidden on mobile */}
         {isExpanded && (
           <motion.button
             initial={{ opacity: 0, scale: 0 }}
@@ -119,9 +119,9 @@ const TokenLegend = () => {
               e.stopPropagation();
               scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="absolute top-4 right-20 w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition-colors duration-200"
+            className="absolute top-4 right-16 sm:right-20 w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-gray-200 hover:bg-gray-300 rounded-md lg:rounded-lg flex items-center justify-center transition-colors duration-200 hidden sm:flex"
           >
-            <span className="text-gray-600 text-sm">↑</span>
+            <span className="text-gray-600 text-xs sm:text-sm">↑</span>
           </motion.button>
         )}
       </motion.div>
@@ -137,10 +137,10 @@ const TokenLegend = () => {
           >
             <div
               ref={scrollRef}
-              className="p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar"
+              className="p-4 lg:p-6 space-y-4 lg:space-y-6 max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto custom-scrollbar"
             >
-              {/* Enhanced token grid - Optimized for horizontal space */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {/* Enhanced token grid - Mobile Optimized */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
                 {tokenEntries.map(([value, token], index) => (
                   <motion.div
                     key={value}
@@ -162,7 +162,7 @@ const TokenLegend = () => {
                     className="group relative cursor-pointer"
                   >
                     <div
-                      className="relative p-5 rounded-2xl transition-all duration-300 overflow-hidden h-full"
+                      className="relative p-3 sm:p-4 lg:p-5 rounded-xl lg:rounded-2xl transition-all duration-300 overflow-hidden h-full"
                       style={{
                         background: `linear-gradient(135deg, ${token.color}15, ${token.color}05)`,
                         border: `2px solid ${token.color}30`
@@ -176,32 +176,32 @@ const TokenLegend = () => {
                         }}
                       />
 
-                      <div className="relative flex flex-col items-center text-center space-y-3 h-full">
+                      <div className="relative flex flex-col items-center text-center space-y-2 lg:space-y-3 h-full">
                         <motion.div
                           className="flex-shrink-0"
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
                         >
                           <div
-                            className="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl flex items-center justify-center text-white shadow-xl relative overflow-hidden"
+                            className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 rounded-xl lg:rounded-2xl flex items-center justify-center text-white shadow-xl relative overflow-hidden"
                             style={{ background: token.gradient || token.color }}
                           >
-                            <div className="text-3xl lg:text-4xl xl:text-5xl relative z-10">{token.emoji}</div>
+                            <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl relative z-10">{token.emoji}</div>
                             {/* Shimmer effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                           </div>
                         </motion.div>
 
-                        <div className="flex-1 flex flex-col justify-center space-y-2">
+                        <div className="flex-1 flex flex-col justify-center space-y-1 sm:space-y-2">
                           <motion.span
-                            className="text-sm lg:text-base bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold shadow-md mx-auto"
+                            className="text-xs sm:text-sm lg:text-base bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 rounded-full font-bold shadow-md mx-auto"
                             whileHover={{ scale: 1.1 }}
                             transition={{ type: "spring", stiffness: 400 }}
                           >
                             {value}
                           </motion.span>
-                          <span className="font-bold text-gray-800 text-lg lg:text-xl">{token.name}</span>
-                          <p className="text-sm lg:text-base text-gray-600 leading-relaxed line-clamp-2">
+                          <span className="font-bold text-gray-800 text-sm sm:text-base lg:text-lg xl:text-xl">{token.name}</span>
+                          <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed line-clamp-2">
                             {token.description}
                           </p>
                         </div>
@@ -211,21 +211,21 @@ const TokenLegend = () => {
                 ))}
               </div>
 
-              {/* Enhanced Achievement Tiers */}
+              {/* Enhanced Achievement Tiers - Mobile Optimized */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="relative p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200/50"
+                className="relative p-4 lg:p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl lg:rounded-2xl border border-purple-200/50"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500" />
 
-                <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-3 text-2xl">🏆</span>
+                <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 lg:mb-4 flex items-center">
+                  <span className="mr-2 sm:mr-3 text-lg sm:text-2xl">🏆</span>
                   Achievement Tiers
                 </h4>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                   {[
                     { icon: '🥉', name: 'Novice', range: '2-32', color: 'from-gray-400 to-gray-500' },
                     { icon: '🥈', name: 'Explorer', range: '64-256', color: 'from-blue-400 to-blue-500' },
@@ -239,31 +239,31 @@ const TokenLegend = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.4 + index * 0.1 }}
                       whileHover={{ scale: 1.05, y: -2 }}
-                      className="text-center p-3 bg-white rounded-xl shadow-md border border-gray-200/50 hover:shadow-lg transition-all duration-200"
+                      className="text-center p-2 sm:p-3 bg-white rounded-lg sm:rounded-xl shadow-md border border-gray-200/50 hover:shadow-lg transition-all duration-200"
                     >
-                      <div className="text-2xl mb-2">{tier.icon}</div>
-                      <div className="font-semibold text-gray-800 text-sm">{tier.name}</div>
+                      <div className="text-lg sm:text-2xl mb-1 sm:mb-2">{tier.icon}</div>
+                      <div className="font-semibold text-gray-800 text-xs sm:text-sm">{tier.name}</div>
                       <div className="text-xs text-gray-600">{tier.range}</div>
                     </motion.div>
                   ))}
                 </div>
               </motion.div>
 
-              {/* Enhanced Game Tips */}
+              {/* Enhanced Game Tips - Mobile Optimized */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="relative p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl border border-cyan-200/50"
+                className="relative p-4 lg:p-6 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl lg:rounded-2xl border border-cyan-200/50"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
 
-                <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                  <span className="mr-3 text-2xl">💡</span>
+                <h4 className="text-base sm:text-lg font-bold text-gray-800 mb-3 lg:mb-4 flex items-center">
+                  <span className="mr-2 sm:mr-3 text-lg sm:text-2xl">💡</span>
                   Pro Tips & Strategy
                 </h4>
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {[
                     'Keep your highest tile in a corner for better control',
                     'Build towards one direction consistently',
@@ -276,18 +276,18 @@ const TokenLegend = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.6 + index * 0.1 }}
-                      className="flex items-start space-x-3 p-3 bg-white/70 rounded-lg"
+                      className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 bg-white/70 rounded-lg"
                     >
-                      <span className="text-cyan-500 text-sm mt-1">•</span>
-                      <span className="text-sm text-gray-700 leading-relaxed">{tip}</span>
+                      <span className="text-cyan-500 text-xs sm:text-sm mt-1 flex-shrink-0">•</span>
+                      <span className="text-xs sm:text-sm text-gray-700 leading-relaxed">{tip}</span>
                     </motion.div>
                   ))}
                 </div>
               </motion.div>
             </div>
 
-            {/* Enhanced scroll progress indicator */}
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-200">
+            {/* Enhanced scroll progress indicator - Mobile Optimized */}
+            <div className="absolute bottom-0 left-0 w-full h-0.5 sm:h-1 bg-gray-200">
               <motion.div
                 className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500"
                 style={{ width: `${scrollProgress * 100}%` }}

@@ -208,23 +208,46 @@ body::before {
   animation: tile-merge 0.3s ease;
 }
 
-/* Responsive design */
+/* Responsive design - Enhanced Mobile First */
 @media (max-width: 640px) {
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
   .game-board {
-    padding: 1rem;
+    padding: 0.75rem;
     max-width: 100%;
+    margin: 0 auto;
   }
   
   .game-tile {
-    min-width: 4rem;
-    min-height: 4rem;
+    min-width: 3.5rem;
+    min-height: 3.5rem;
+    border-width: 1px;
   }
   
-  .game-tile .text-4xl { font-size: 1.5rem; }
-  .game-tile .text-5xl { font-size: 1.75rem; }
-  .game-tile .text-6xl { font-size: 2rem; }
-  .game-tile .text-7xl { font-size: 2.25rem; }
-  .game-tile .text-8xl { font-size: 2.5rem; }
+  .game-tile .text-4xl { font-size: 1.25rem; }
+  .game-tile .text-5xl { font-size: 1.5rem; }
+  .game-tile .text-6xl { font-size: 1.75rem; }
+  .game-tile .text-7xl { font-size: 2rem; }
+  .game-tile .text-8xl { font-size: 2.25rem; }
+  
+  /* Touch-friendly spacing */
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  /* Reduce shadows on mobile for better performance */
+  .shadow-2xl {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Better touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 @media (min-width: 641px) and (max-width: 768px) {
