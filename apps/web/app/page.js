@@ -242,30 +242,30 @@ function GameComponent() {
 
         {/* Enhanced Game Board */}
         <motion.div 
-          className="flex flex-col lg:flex-row gap-8 items-center justify-center"
+          className="flex flex-col lg:flex-row gap-8 items-start justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
           {/* Main Game Area */}
-          <div className="flex-1 max-w-5xl mx-auto">
+          <div className="flex-1 max-w-4xl">
             <motion.div 
-              className="bg-white/10 backdrop-blur-xl rounded-3xl p-10 border border-white/20 shadow-2xl"
+              className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="text-center mb-10">
-                <h2 className="text-5xl font-bold text-white mb-4 text-glow-purple">Cosmos 2048</h2>
-                <p className="text-white/70 text-xl">Swipe or use arrow keys to play</p>
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-bold text-white mb-3 text-glow-purple">Cosmos 2048</h2>
+                <p className="text-white/70 text-lg">Swipe or use arrow keys to play</p>
               </div>
               
               <div 
-                className="game-board bg-white/20 backdrop-blur-sm rounded-3xl p-8 mx-auto max-w-3xl"
+                className="game-board bg-white/20 backdrop-blur-sm rounded-3xl p-6 mx-auto max-w-2xl"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-4 gap-4">
                   {board.map((row, rowIndex) =>
                     row.map((cell, colIndex) => {
                       const tileData = getTileData(cell);
@@ -279,7 +279,7 @@ function GameComponent() {
                       return (
                         <motion.div
                           key={`${rowIndex}-${colIndex}`}
-                          className={`game-tile w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 xl:w-40 xl:h-40 rounded-3xl flex items-center justify-center text-white font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl relative overflow-hidden ${
+                          className={`game-tile w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-3xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl relative overflow-hidden ${
                             cell === 0 ? 'bg-white/20' : 'shadow-lg'
                           }`}
                           style={{
@@ -297,8 +297,8 @@ function GameComponent() {
                           {cell !== 0 && (
                             <>
                               <div className="relative z-10">
-                                <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl mb-3">{tileData.emoji}</div>
-                                <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl opacity-90 font-semibold">{cell}</div>
+                                <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-2">{tileData.emoji}</div>
+                                <div className="text-sm sm:text-base md:text-lg lg:text-xl opacity-90 font-semibold">{cell}</div>
                               </div>
                               
                               {/* Enhanced glow effect for high-value tiles */}
@@ -338,23 +338,23 @@ function GameComponent() {
                 )}
               </AnimatePresence>
             </motion.div>
+            
+            {/* Token Legend directly after game */}
+            <motion.div 
+              className="mt-8"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              <TokenLegend />
+            </motion.div>
           </div>
 
           {/* Sidebar Components - Now only BadgeGallery and Leaderboard */}
-          <div className="w-full lg:w-80 space-y-6">
+          <div className="w-full lg:w-96 space-y-6">
             <BadgeGallery />
             <Leaderboard />
           </div>
-        </motion.div>
-
-        {/* Token Legend below the game - Full width for better readability */}
-        <motion.div 
-          className="mt-12 max-w-7xl mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-        >
-          <TokenLegend />
         </motion.div>
       </div>
 

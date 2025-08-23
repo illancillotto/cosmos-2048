@@ -212,7 +212,7 @@ const BadgeGallery = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
       >
         <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">🎯 Available Badge Types</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="space-y-4">
           {[
             { name: 'Common', emoji: '🥉', color: 'from-gray-400 to-gray-500', rarity: '40%' },
             { name: 'Uncommon', emoji: '🥈', color: 'from-green-400 to-green-500', rarity: '30%' },
@@ -222,22 +222,24 @@ const BadgeGallery = () => {
           ].map((badge, index) => (
             <motion.div
               key={badge.name}
-              className="text-center p-4 bg-white rounded-2xl shadow-md border border-gray-200/50 hover:shadow-lg transition-all duration-200 group cursor-pointer"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center p-4 bg-white rounded-2xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-200 group cursor-pointer"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
-              whileHover={{ scale: 1.05, y: -3 }}
+              whileHover={{ scale: 1.02, x: 5 }}
             >
               <motion.div
-                className="text-4xl mb-3"
+                className="text-5xl mr-4 flex-shrink-0"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.6 }}
               >
                 {badge.emoji}
               </motion.div>
-              <div className="font-semibold text-gray-800 mb-1">{badge.name}</div>
-              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block">
-                {badge.rarity}
+              <div className="flex-1">
+                <div className="font-bold text-gray-800 text-lg mb-1">{badge.name}</div>
+                <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block font-semibold">
+                  {badge.rarity}
+                </div>
               </div>
             </motion.div>
           ))}

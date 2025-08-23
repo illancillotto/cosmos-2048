@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { wheelPrizes } from '../lib/cosmosMap';
 
-const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScore, maxTile }) => {
+const WheelOfFortune = ({ onSpinComplete, onMintNFT, isSpinning: externalSpinning, gameScore, maxTile }) => {
   const canvasRef = useRef(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -98,7 +98,7 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
         return prize;
       }
     }
-    
+
     return wheelPrizes[wheelPrizes.length - 1]; // Fallback to last prize
   };
 
@@ -108,30 +108,30 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
 
     setIsSpinning(true);
     setShowResult(false);
-    
+
     const prize = selectPrize();
     const prizeIndex = wheelPrizes.findIndex(p => p.id === prize.id);
-    
+
     // Calculate target rotation
     const targetSegmentAngle = prizeIndex * segmentAngle;
     const spins = 5 + Math.random() * 5; // 5-10 full rotations
     const targetRotation = (spins * 2 * Math.PI) - targetSegmentAngle;
-    
+
     // Animate rotation
     let startTime = null;
     const duration = 3000; // 3 seconds
-    
+
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Easing function for realistic deceleration
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const currentRotation = targetRotation * easeOut;
-      
+
       setRotation(currentRotation);
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
@@ -146,7 +146,7 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
         }, 500);
       }
     };
-    
+
     requestAnimationFrame(animate);
   };
 
@@ -167,7 +167,7 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
         <p className="text-gray-600">Spin the wheel to win exclusive NFT badges!</p>
         {gameScore && (
           <p className="text-sm text-gray-500 mt-2">
-            Game Score: <span className="font-bold">{gameScore.toLocaleString()}</span> | 
+            Game Score: <span className="font-bold">{gameScore.toLocaleString()}</span> |
             Max Tile: <span className="font-bold">{maxTile}</span>
           </p>
         )}
@@ -180,17 +180,16 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
           height={340}
           className="drop-shadow-lg"
         />
-        
+
         {/* Spin button overlay */}
         <motion.button
           onClick={spinWheel}
           disabled={isSpinning || externalSpinning}
           className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                     px-4 py-2 rounded-full font-bold text-white shadow-lg transition-all duration-200 ${
-                       isSpinning || externalSpinning
-                         ? 'bg-gray-400 cursor-not-allowed'
-                         : 'bg-purple-600 hover:bg-purple-700 hover:scale-110'
-                     }`}
+                     px-4 py-2 rounded-full font-bold text-white shadow-lg transition-all duration-200 ${isSpinning || externalSpinning
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-700 hover:scale-110'
+            }`}
           whileHover={{ scale: isSpinning ? 1 : 1.1 }}
           whileTap={{ scale: isSpinning ? 1 : 0.95 }}
         >
@@ -228,7 +227,7 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
                   {selectedPrize.name}
                 </span>!
               </p>
-              
+
               {selectedPrize.rarity !== 'none' && (
                 <div className="bg-gray-100 rounded-lg p-4 mb-4">
                   <p className="text-sm text-gray-600">
@@ -242,7 +241,12 @@ const WheelOfFortune = ({ onSpinComplete, isSpinning: externalSpinning, gameScor
               )}
 
               <button
-                onClick={() => setShowResult(false)}
+                onClick={() => {
+                  if (selectedPrize.rarity !== 'none' && onMintNFT) {
+                    onMintNFT(selectedPrize);
+                  }
+                  setShowResult(false);
+                }}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
               >
                 {selectedPrize.rarity !== 'none' ? 'Mint NFT!' : 'Close'}

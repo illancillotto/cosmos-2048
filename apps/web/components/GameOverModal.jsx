@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WheelOfFortune from './WheelOfFortune';
-import { mintGameBadgeNFT } from '../lib/nftMinter';
+import { mintGameBadgeNFT, validateNFTContract } from '../lib/nftMinter';
 import { useWallet } from '../contexts/WalletContext';
 import { getTileData, getTileRarity } from '../lib/cosmosMap';
 
-const GameOverModal = ({ 
-  isOpen, 
-  onClose, 
-  score, 
-  maxTile, 
-  won, 
-  onNewGame, 
-  onSubmitScore 
+const GameOverModal = ({
+  isOpen,
+  onClose,
+  score,
+  maxTile,
+  won,
+  onNewGame,
+  onSubmitScore
 }) => {
   const { isConnected, address, offlineSigner } = useWallet();
   const [showWheel, setShowWheel] = useState(false);
@@ -22,9 +22,22 @@ const GameOverModal = ({
   const [isMintingNFT, setIsMintingNFT] = useState(false);
   const [mintResult, setMintResult] = useState(null);
   const [nftMinted, setNftMinted] = useState(false);
+  const [configError, setConfigError] = useState(null);
 
   const maxTileData = getTileData(maxTile);
   const rarity = getTileRarity(maxTile);
+
+  // Check NFT configuration on mount
+  useEffect(() => {
+    const checkNFTConfig = async () => {
+      const validation = await validateNFTContract();
+      if (!validation.valid) {
+        setConfigError(validation.error);
+      }
+    };
+
+    checkNFTConfig();
+  }, []);
 
   const handleSpinWheel = () => {
     setShowWheel(true);
@@ -32,7 +45,7 @@ const GameOverModal = ({
 
   const handleWheelComplete = async (prize) => {
     setWheelPrize(prize);
-    
+
     // Auto-mint NFT if connected and won a prize
     if (isConnected && prize.rarity !== 'none') {
       await handleMintNFT(prize);
@@ -57,9 +70,9 @@ const GameOverModal = ({
       };
 
       const result = await mintGameBadgeNFT(offlineSigner, gameData, prize);
-      
+
       setMintResult(result);
-      
+
       if (result.success) {
         setNftMinted(true);
       }
@@ -103,9 +116,8 @@ const GameOverModal = ({
           initial={{ scale: 0.8, opacity: 0, y: 50 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.8, opacity: 0, y: 50 }}
-          className={`bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto ${
-            showWheel ? 'p-0' : 'p-8'
-          }`}
+          className={`bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto ${showWheel ? 'p-0' : 'p-8'
+            }`}
         >
           {!showWheel ? (
             // Game Over Screen
@@ -113,11 +125,11 @@ const GameOverModal = ({
               <div className="text-6xl mb-4">
                 {won ? '🎉' : '💀'}
               </div>
-              
+
               <h2 className="text-3xl font-bold text-gray-800">
                 {won ? 'Congratulations!' : 'Game Over!'}
               </h2>
-              
+
               <div className="text-lg text-gray-600 space-y-2">
                 {won ? (
                   <p>You reached the legendary <strong>{maxTile}</strong> tile!</p>
@@ -157,8 +169,21 @@ const GameOverModal = ({
                 </div>
               </div>
 
+              {/* Configuration Notice */}
+              {configError && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-red-600">❌</span>
+                    <div className="text-sm text-red-800">
+                      <div className="font-semibold">NFT Minting Configuration Issue:</div>
+                      <div className="mt-1">{configError}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Wallet Connection Notice */}
-              {!isConnected && (
+              {!isConnected && !configError && (
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-yellow-600">⚠️</span>
@@ -179,7 +204,7 @@ const GameOverModal = ({
                 >
                   🎰 Spin the Wheel of Cosmos!
                 </motion.button>
-                
+
                 <button
                   onClick={onSubmitScore}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg"
@@ -215,9 +240,10 @@ const GameOverModal = ({
                   ×
                 </button>
               </div>
-              
+
               <WheelOfFortune
                 onSpinComplete={handleWheelComplete}
+                onMintNFT={handleMintNFT}
                 gameScore={score}
                 maxTile={maxTile}
               />

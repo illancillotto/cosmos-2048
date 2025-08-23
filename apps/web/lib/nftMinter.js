@@ -115,6 +115,12 @@ export const uploadMetadata = async (metadata) => {
 // Mint NFT on Stargaze
 export const mintGameBadgeNFT = async (offlineSigner, gameData, wheelPrize) => {
   try {
+    // Check if NFT minting is enabled
+    const validation = await validateNFTContract();
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     if (!offlineSigner) {
       throw new Error('No wallet signer available');
     }
@@ -251,13 +257,25 @@ export const getNFTDetails = async (tokenId) => {
   }
 };
 
+// Check if NFT minting is enabled
+export const isNFTMintingEnabled = () => {
+  return process.env.NEXT_PUBLIC_ENABLE_NFT_MINTING === 'true';
+};
+
 // Validate contract address
 export const validateNFTContract = async () => {
   try {
-    if (!NFT_CONFIG.contractAddress || NFT_CONFIG.contractAddress === 'stars1...') {
+    if (!isNFTMintingEnabled()) {
       return {
         valid: false,
-        error: 'NFT contract address not configured'
+        error: 'NFT minting is disabled in configuration. Set NEXT_PUBLIC_ENABLE_NFT_MINTING=true to enable.'
+      };
+    }
+
+    if (!NFT_CONFIG.contractAddress || NFT_CONFIG.contractAddress === 'stars1...' || NFT_CONFIG.contractAddress.includes('example')) {
+      return {
+        valid: false,
+        error: 'NFT contract address not configured. Please set NEXT_PUBLIC_NFT_CONTRACT_ADDRESS with a valid Stargaze contract address.'
       };
     }
 
