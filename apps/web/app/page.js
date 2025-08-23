@@ -130,12 +130,30 @@ function GameComponent() {
       }
     };
 
+    // Prevent body scroll when touching game board area
+    const preventBodyScroll = (e) => {
+      const gameBoard = e.target.closest('.game-board');
+      if (gameBoard) {
+        e.preventDefault();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    // Add passive: false to ensure preventDefault works
+    document.addEventListener('touchstart', preventBodyScroll, { passive: false });
+    document.addEventListener('touchmove', preventBodyScroll, { passive: false });
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener('touchstart', preventBodyScroll);
+      document.removeEventListener('touchmove', preventBodyScroll);
+    };
   }, [handleMove]);
 
-  // Touch handling for mobile
+  // Touch handling for mobile - Fixed scroll interference
   const handleTouchStart = (e) => {
+    // Prevent page scrolling when touching the game board
+    e.preventDefault();
     setTouchStart({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY
@@ -143,21 +161,29 @@ function GameComponent() {
   };
 
   const handleTouchMove = (e) => {
+    // Prevent page scrolling during game moves
+    e.preventDefault();
     setTouchEnd({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY
     });
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
+    // Prevent default touch behavior
+    e.preventDefault();
+    
     if (!touchStart || !touchEnd) return;
     
     const distanceX = touchStart.x - touchEnd.x;
     const distanceY = touchStart.y - touchEnd.y;
     const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
     
+    // Increased threshold for more reliable swipe detection
+    const minSwipeDistance = 30;
+    
     if (isHorizontalSwipe) {
-      if (Math.abs(distanceX) > 50) {
+      if (Math.abs(distanceX) > minSwipeDistance) {
         if (distanceX > 0) {
           handleMove('left');
         } else {
@@ -165,7 +191,7 @@ function GameComponent() {
         }
       }
     } else {
-      if (Math.abs(distanceY) > 50) {
+      if (Math.abs(distanceY) > minSwipeDistance) {
         if (distanceY > 0) {
           handleMove('up');
         } else {
@@ -256,7 +282,10 @@ function GameComponent() {
             >
               <div className="text-center mb-4 lg:mb-8">
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 lg:mb-3 text-glow-purple">Cosmos 2048</h2>
-                <p className="text-white/70 text-sm sm:text-base lg:text-lg">Swipe or use arrow keys to play</p>
+                <p className="text-white/70 text-sm sm:text-base lg:text-lg">
+                  <span className="block sm:hidden">👆 Swipe to move tiles</span>
+                  <span className="hidden sm:block">Swipe or use arrow keys to play</span>
+                </p>
               </div>
               
               <div 
