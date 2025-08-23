@@ -137,10 +137,10 @@ const TokenLegend = () => {
           >
             <div
               ref={scrollRef}
-              className="p-6 space-y-6 max-h-96 overflow-y-auto custom-scrollbar"
+              className="p-6 space-y-6 max-h-[600px] overflow-y-auto custom-scrollbar"
             >
-              {/* Enhanced token grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Enhanced token grid - Optimized for horizontal space */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {tokenEntries.map(([value, token], index) => (
                   <motion.div
                     key={value}
@@ -162,7 +162,7 @@ const TokenLegend = () => {
                     className="group relative cursor-pointer"
                   >
                     <div
-                      className="relative p-4 rounded-2xl transition-all duration-300 overflow-hidden"
+                      className="relative p-5 rounded-2xl transition-all duration-300 overflow-hidden h-full"
                       style={{
                         background: `linear-gradient(135deg, ${token.color}15, ${token.color}05)`,
                         border: `2px solid ${token.color}30`
@@ -176,34 +176,32 @@ const TokenLegend = () => {
                         }}
                       />
 
-                      <div className="relative flex items-center space-x-4">
+                      <div className="relative flex flex-col items-center text-center space-y-3 h-full">
                         <motion.div
                           className="flex-shrink-0"
                           whileHover={{ rotate: 360 }}
                           transition={{ duration: 0.6 }}
                         >
                           <div
-                            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl relative overflow-hidden"
+                            className="w-16 h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 rounded-2xl flex items-center justify-center text-white shadow-xl relative overflow-hidden"
                             style={{ background: token.gradient || token.color }}
                           >
-                            <div className="text-2xl relative z-10">{token.emoji}</div>
+                            <div className="text-3xl lg:text-4xl xl:text-5xl relative z-10">{token.emoji}</div>
                             {/* Shimmer effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                           </div>
                         </motion.div>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <span className="font-bold text-gray-800 text-lg">{token.name}</span>
-                            <motion.span
-                              className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full font-semibold shadow-md"
-                              whileHover={{ scale: 1.1 }}
-                              transition={{ type: "spring", stiffness: 400 }}
-                            >
-                              {value}
-                            </motion.span>
-                          </div>
-                          <p className="text-sm text-gray-600 leading-relaxed">
+                        <div className="flex-1 flex flex-col justify-center space-y-2">
+                          <motion.span
+                            className="text-sm lg:text-base bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold shadow-md mx-auto"
+                            whileHover={{ scale: 1.1 }}
+                            transition={{ type: "spring", stiffness: 400 }}
+                          >
+                            {value}
+                          </motion.span>
+                          <span className="font-bold text-gray-800 text-lg lg:text-xl">{token.name}</span>
+                          <p className="text-sm lg:text-base text-gray-600 leading-relaxed line-clamp-2">
                             {token.description}
                           </p>
                         </div>
