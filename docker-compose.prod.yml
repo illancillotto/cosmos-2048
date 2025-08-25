@@ -34,7 +34,7 @@ services:
       - "3017"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost/api
+      - NEXT_PUBLIC_API_URL=https://cosmos2048.ddns.net/api
     volumes:
       # Volume for persistent cache Next.js
       - nextjs_cache:/app/.next/cache
