@@ -147,7 +147,9 @@ docker compose -f docker-compose.low-memory.yml up -d mongodb
 # Wait for MongoDB to be ready
 log "Waiting for MongoDB to start..."
 for i in {1..30}; do
-    if docker exec cosmos2048-mongodb-low-mem mongosh --eval "db.adminCommand('ping')" &>/dev/null; then
+    # Try both mongosh (newer) and mongo (older) commands
+    if docker exec cosmos2048-mongodb-low-mem mongosh --eval "db.adminCommand('ping')" &>/dev/null || \
+       docker exec cosmos2048-mongodb-low-mem mongo --eval "db.adminCommand('ping')" &>/dev/null; then
         log "MongoDB is ready ✅"
         break
     fi

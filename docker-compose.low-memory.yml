@@ -1,7 +1,7 @@
 services:
   # MongoDB (Lightweight configuration)
   mongodb:
-    image: mongo:7-alpine
+    image: mongo:7
     container_name: cosmos2048-mongodb-low-mem
     expose:
       - "27017"
@@ -20,6 +20,11 @@ services:
         reservations:
           memory: 128M
     command: mongod --wiredTigerCacheSizeGB 0.25 --quiet
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")' || mongo --eval 'db.adminCommand(\"ping\")'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Backend API (Memory optimized)
   api:
