@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install production dependencies
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Stage 2: Builder
 FROM node:18-alpine AS builder
@@ -17,7 +17,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies)
+# Install all dependencies
 RUN npm ci
 
 # Copy source code
@@ -38,13 +38,11 @@ RUN adduser --system --uid 1001 nodejs
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install only production dependencies (using --omit=dev instead of --only=production)
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Copy built application or source code
-COPY --from=builder /app/dist ./dist 2>/dev/null || true
-COPY --from=builder /app/src ./src 2>/dev/null || true
-COPY --from=builder /app/src/index.js ./ 2>/dev/null || true
+# Copy application files
+COPY . .
 
 # Set correct permissions
 USER nodejs

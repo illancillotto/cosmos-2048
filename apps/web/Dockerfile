@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies (using --omit=dev instead of --only=production)
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Stage 2: Builder
 FROM node:18-alpine AS builder
@@ -17,7 +17,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install all dependencies (including devDependencies)
+# Install all dependencies
 RUN npm ci
 
 # Copy source code
@@ -53,7 +53,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 CMD ["node", "server.js"]
 
-# Stage 4: Development (Default for docker-compose.yml)
+# Stage 4: Development
 FROM node:18-alpine AS development
 WORKDIR /app
 
