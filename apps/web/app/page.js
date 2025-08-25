@@ -2,16 +2,27 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import HUD from '../components/HUD';
 import Leaderboard from '../components/Leaderboard';
 import BadgeGallery from '../components/BadgeGallery';
 import TokenLegend from '../components/TokenLegend';
 import GameOverModal from '../components/GameOverModal';
 import { initializeGame, move, canMove, hasWon, spawnRandomTile } from '../lib/game2048';
 import { getTileData, getTileAnimationClass } from '../lib/cosmosMap';
-import { WalletProvider } from '../contexts/WalletContext';
+import { WalletProvider, useWallet } from '../contexts/WalletContext';
 
 function GameComponent() {
+  const {
+    isConnected,
+    address,
+    balance,
+    isConnecting,
+    connect,
+    disconnect,
+    formatAddress,
+    isKeplrAvailable,
+    error
+  } = useWallet();
+
   const [board, setBoard] = useState(null);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
@@ -20,6 +31,7 @@ function GameComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [maxTileReached, setMaxTileReached] = useState(2);
+  const [showNewGameConfirm, setShowNewGameConfirm] = useState(false);
   
   // Touch handling for mobile
   const [touchStart, setTouchStart] = useState(null);
@@ -47,7 +59,7 @@ function GameComponent() {
       }
     }
     
-    newGame();
+    startNewGame();
   }, []);
 
   useEffect(() => {
@@ -217,13 +229,22 @@ function GameComponent() {
     }
   };
 
-  const newGame = () => {
+  const handleNewGameClick = () => {
+    if (score > 0 || !gameOver) {
+      setShowNewGameConfirm(true);
+    } else {
+      startNewGame();
+    }
+  };
+
+  const startNewGame = () => {
     const initialBoard = initializeGame();
     setBoard(initialBoard);
     setScore(0);
     setGameOver(false);
     setWon(false);
     setShowGameOverModal(false);
+    setShowNewGameConfirm(false);
     setMaxTileReached(2);
     setNewTilePosition(null);
     setMergedPositions([]);
@@ -236,6 +257,10 @@ function GameComponent() {
     setRippleEffects([]);
     setComboEffects([]);
     setExplosionParticles([]);
+  };
+
+  const cancelNewGame = () => {
+    setShowNewGameConfirm(false);
   };
 
   // Track max tile reached
@@ -261,6 +286,19 @@ function GameComponent() {
     
     if (result.moved) {
       let newBoard = spawnRandomTile(result.board);
+      
+      // Find the new tile position for spawn animation
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+          if (result.board[row][col] === 0 && newBoard[row][col] !== 0) {
+            setNewTilePosition({ row, col });
+            // Remove new tile position after spawn animation
+            setTimeout(() => setNewTilePosition(null), 800);
+            break;
+          }
+        }
+      }
+      
       setBoard(newBoard);
       setScore(prevScore => prevScore + result.gained);
       
@@ -314,7 +352,7 @@ function GameComponent() {
               newSet.delete(tileId);
               return newSet;
             });
-          }, animationType === 'explosive' ? 1000 : animationType === 'legendary' ? 800 : animationType === 'cosmic' ? 600 : 400);
+          }, animationType === 'explosive' ? 1500 : animationType === 'legendary' ? 1200 : animationType === 'cosmic' ? 800 : 600);
         });
         
         // Clear merge positions after animation
@@ -372,17 +410,28 @@ function GameComponent() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
+    const handleGlobalKeyPress = (e) => {
+      // Close confirmation modal with Escape
+      if (e.key === 'Escape' && showNewGameConfirm) {
+        cancelNewGame();
+        return;
+      }
+      
+      // Regular game controls
+      handleKeyPress(e);
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyPress);
     // Add passive: false to ensure preventDefault works
     document.addEventListener('touchstart', preventBodyScroll, { passive: false });
     document.addEventListener('touchmove', preventBodyScroll, { passive: false });
     
     return () => {
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('keydown', handleGlobalKeyPress);
       document.removeEventListener('touchstart', preventBodyScroll);
       document.removeEventListener('touchmove', preventBodyScroll);
     };
-  }, [handleMove]);
+  }, [handleMove, showNewGameConfirm]);
 
   // Touch handling for mobile - Fixed scroll interference
   const handleTouchStart = (e) => {
@@ -490,15 +539,6 @@ function GameComponent() {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30 sm:opacity-50" />
       
       <div className="relative z-10 container mx-auto px-2 sm:px-4 py-4 sm:py-6 lg:py-8">
-        <HUD 
-          score={score}
-          best={best}
-          gameOver={gameOver}
-          won={won}
-          onNewGame={newGame}
-          onSubmitScore={handleSubmitScore}
-          isSubmitting={isSubmitting}
-        />
 
         {/* Enhanced Game Board - Mobile Optimized */}
         <motion.div 
@@ -509,14 +549,126 @@ function GameComponent() {
         >
           {/* Main Game Area - Full width on mobile */}
           <div className="w-full lg:flex-1 lg:max-w-4xl">
+            {/* Compact Game Controls Bar */}
+            <motion.div 
+              className="bg-white/10 backdrop-blur-xl rounded-xl mb-4 p-3 border border-white/20 shadow-lg"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              {/* Top Row: Title and Wallet */}
+              <div className="flex justify-between items-center mb-3">
+                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                  Cosmos 2048
+                </h1>
+                
+                {/* Wallet Status - Compact */}
+                <div className="flex items-center gap-2">
+                  {isConnected ? (
+                    <motion.div 
+                      className="flex items-center bg-green-500/20 px-3 py-1.5 rounded-lg border border-green-400/30"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse" />
+                      <span className="text-green-100 text-sm font-medium">
+                        {formatAddress(address)}
+                      </span>
+                      <span className="text-green-300 text-xs ml-2">
+                        {balance.toFixed(1)}★
+                      </span>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      onClick={connect}
+                      disabled={isConnecting}
+                      className="bg-purple-600/80 hover:bg-purple-600 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isConnecting ? '⏳' : '🔗'} {isConnecting ? 'Connecting...' : 'Connect'}
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Bottom Row: Score, Best, and New Game */}
+              <div className="flex justify-between items-center">
+                <div className="flex gap-3">
+                  {/* Score */}
+                  <motion.div 
+                    className="bg-purple-600/30 px-3 py-2 rounded-lg border border-purple-400/30"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-purple-200 text-xs font-medium">SCORE</div>
+                    <div className="text-white font-bold text-lg">{score.toLocaleString()}</div>
+                  </motion.div>
+                  
+                  {/* Best */}
+                  <motion.div 
+                    className="bg-yellow-600/30 px-3 py-2 rounded-lg border border-yellow-400/30"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-yellow-200 text-xs font-medium">BEST</div>
+                    <div className="text-white font-bold text-lg">{best.toLocaleString()}</div>
+                  </motion.div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {gameOver && (
+                    <motion.button
+                      onClick={handleSubmitScore}
+                      disabled={isSubmitting}
+                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-3 py-2 rounded-lg font-semibold text-sm transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, duration: 0.3 }}
+                    >
+                      {isSubmitting ? (
+                        <motion.div
+                          className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
+                      ) : (
+                        <span>🏆</span>
+                      )}
+                      <span className="hidden sm:inline">{isSubmitting ? 'Submitting...' : 'Submit'}</span>
+                    </motion.button>
+                  )}
+                  
+                  <motion.button
+                    onClick={handleNewGameClick}
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-xl font-bold text-base transition-all shadow-xl flex items-center gap-3 border-2 border-purple-400/50 hover:border-purple-300"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    animate={{ 
+                      boxShadow: [
+                        "0 10px 25px rgba(139, 92, 246, 0.3)",
+                        "0 10px 35px rgba(139, 92, 246, 0.5)",
+                        "0 10px 25px rgba(139, 92, 246, 0.3)"
+                      ]
+                    }}
+                    transition={{ 
+                      boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                  >
+                    <span className="text-xl">🔄</span>
+                    <span>New Game</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+
             <motion.div 
               className="bg-white/10 backdrop-blur-xl rounded-2xl lg:rounded-3xl p-4 lg:p-8 border border-white/20 shadow-2xl"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="text-center mb-4 lg:mb-8">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 lg:mb-3 text-glow-purple">Cosmos 2048</h2>
-                <p className="text-white/70 text-sm sm:text-base lg:text-lg">
+              <div className="text-center mb-4 lg:mb-6">
+                <p className="text-white/70 text-sm sm:text-base">
                   <span className="block sm:hidden">👆 Swipe to move tiles</span>
                   <span className="hidden sm:block">Swipe or use arrow keys to play</span>
                 </p>
@@ -554,23 +706,25 @@ function GameComponent() {
                         }
                       }
                       
+                      // Add spawn animation class for new tiles
+                      let tileClasses = `game-tile aspect-square w-full rounded-xl sm:rounded-2xl lg:rounded-3xl flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base lg:text-xl relative overflow-hidden ${
+                        cell === 0 ? 'bg-white/20' : 'shadow-lg'
+                      } ${animationClass} ${isGlowing ? 'animate-glow-pulse' : ''}`;
+                      
+                      // Add spawn animation for new tiles
+                      if (isNew) {
+                        tileClasses += ' animate-tile-spawn';
+                      }
+
                       return (
                         <motion.div
                           key={`${rowIndex}-${colIndex}`}
-                          className={`game-tile aspect-square w-full rounded-xl sm:rounded-2xl lg:rounded-3xl flex items-center justify-center text-white font-bold text-xs sm:text-sm md:text-base lg:text-xl relative overflow-hidden ${
-                            cell === 0 ? 'bg-white/20' : 'shadow-lg'
-                          } ${animationClass} ${isGlowing ? 'animate-glow-pulse' : ''}`}
+                          className={tileClasses}
                           style={{
                             background: cell === 0 ? 'rgba(255, 255, 255, 0.2)' : tileData.gradient || tileData.color,
                             border: cell === 0 ? '2px solid rgba(255, 255, 255, 0.3)' : 'none'
                           }}
-                          initial={isNew ? { scale: 0, rotate: 180 } : { scale: 1 }}
-                          animate={isNew ? { scale: 1, rotate: 0 } : { scale: 1 }}
-                          transition={{ 
-                            duration: isNew ? 0.3 : 0.15,
-                            type: isNew ? "spring" : "easeOut"
-                          }}
-                          whileHover={cell !== 0 ? { scale: 1.08, rotate: 2 } : {}}
+                          whileHover={cell !== 0 ? { scale: 1.12, rotate: 3 } : {}}
                         >
                           {cell !== 0 && (
                             <>
@@ -645,7 +799,7 @@ function GameComponent() {
             maxTile={maxTileReached}
             won={won}
             onClose={() => setShowGameOverModal(false)}
-            onNewGame={newGame}
+            onNewGame={startNewGame}
             onSubmitScore={handleSubmitScore}
           />
         )}
@@ -731,6 +885,78 @@ function GameComponent() {
             </div>
           </motion.div>
         ))}
+      </AnimatePresence>
+
+      {/* New Game Confirmation Modal */}
+      <AnimatePresence>
+        {showNewGameConfirm && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={cancelNewGame}
+            />
+            
+            {/* Modal */}
+            <motion.div
+              className="relative bg-gradient-to-br from-purple-900/95 via-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl max-w-sm w-full mx-4"
+              initial={{ scale: 0.8, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, y: 20, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              {/* Header */}
+              <div className="p-6 pb-4">
+                <div className="flex items-center justify-center mb-4">
+                  <motion.div
+                    className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-xl"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <span className="text-2xl">⚠️</span>
+                  </motion.div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-white text-center mb-2">
+                  Start New Game?
+                </h3>
+                
+                <p className="text-white/70 text-center text-sm leading-relaxed">
+                  {score > 0 
+                    ? `You'll lose your current progress and score of ${score.toLocaleString()} points.`
+                    : 'This will start a fresh game.'
+                  }
+                </p>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex gap-3 p-6 pt-2">
+                <motion.button
+                  onClick={cancelNewGame}
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/30 px-4 py-3 rounded-xl font-semibold text-sm transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Cancel
+                </motion.button>
+                
+                <motion.button
+                  onClick={startNewGame}
+                  className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-lg"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  New Game
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
     </div>
