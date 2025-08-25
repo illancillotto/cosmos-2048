@@ -145,6 +145,7 @@ $RECYCLE.BIN/
 docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
+!docker-compose.prod.yml
 
 # Docker volumes
 docker-volumes/

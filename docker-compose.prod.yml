@@ -1,0 +1,129 @@
+services:
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: cosmos2048-nginx-prod
+    ports:
+      - "80:80" 
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/maintenance.html:/usr/share/nginx/html/maintenance.html:ro
+      # Volume for SSL certificates (optional)
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - web
+      - api
+    networks:
+      - cosmos2048-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Next.js (Production Build)
+  web:
+    build: 
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: production
+    container_name: cosmos2048-frontend-prod
+    expose:
+      - "3017"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost/api
+    volumes:
+      # Volume for persistent cache Next.js
+      - nextjs_cache:/app/.next/cache
+    depends_on:
+      - api
+    networks:
+      - cosmos2048-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3017/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API (Production)
+  api:
+    build: 
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: cosmos2048-api-prod
+    expose:
+      - "5017"
+    environment:
+      - NODE_ENV=production
+      - PORT=5017
+      - MONGODB_URI=mongodb://mongodb:27017/cosmos2048_prod
+      - JWT_SECRET=${JWT_SECRET:-your-super-secure-jwt-secret-key}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - cosmos2048-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5017/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB (Production with Persistence)
+  mongodb:
+    image: mongo:7
+    container_name: cosmos2048-mongodb-prod
+    expose:
+      - "27017"
+    environment:
+      - MONGO_INITDB_DATABASE=cosmos2048_prod
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - cosmos2048-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching (optional for future optimizations)
+  redis:
+    image: redis:7-alpine
+    container_name: cosmos2048-redis-prod
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cosmos2048-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: redis-server --save 20 1 --loglevel warning
+
+networks:
+  cosmos2048-network:
+    driver: bridge
+    name: cosmos2048-prod-network
+
+volumes:
+  # Persistent volumes for production
+  mongodb_data:
+    name: cosmos2048-mongodb-data
+  mongodb_config:
+    name: cosmos2048-mongodb-config
+  redis_data:
+    name: cosmos2048-redis-data
+  nextjs_cache:
+    name: cosmos2048-nextjs-cache
