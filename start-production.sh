@@ -33,16 +33,164 @@ info() {
     echo -e "${BLUE}[$(date +'%H:%M:%S')] INFO:${NC} $1"
 }
 
-# Verify Docker
+# System requirements check
+check_system_requirements() {
+    info "Checking system requirements..."
+    
+    # Check available memory (at least 2GB recommended)
+    MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    MEMORY_GB=$((MEMORY_KB / 1024 / 1024))
+    
+    if [ $MEMORY_GB -lt 2 ]; then
+        warn "System has ${MEMORY_GB}GB RAM. Minimum 2GB recommended for production."
+    else
+        log "Memory: ${MEMORY_GB}GB ✅"
+    fi
+    
+    # Check available disk space (at least 10GB recommended)
+    DISK_AVAIL=$(df . | tail -1 | awk '{print $4}')
+    DISK_AVAIL_GB=$((DISK_AVAIL / 1024 / 1024))
+    
+    if [ $DISK_AVAIL_GB -lt 10 ]; then
+        warn "Available disk space: ${DISK_AVAIL_GB}GB. Minimum 10GB recommended."
+    else
+        log "Disk space: ${DISK_AVAIL_GB}GB available ✅"
+    fi
+    
+    # Check if port 80 is available
+    if ss -tulpn | grep -q ":80 " 2>/dev/null; then
+        warn "Port 80 is already in use. You may need to stop other web servers."
+        info "To check what's using port 80: sudo ss -tulpn | grep :80"
+        info "To stop Apache: sudo systemctl stop apache2"
+        info "To stop Nginx: sudo systemctl stop nginx"
+    else
+        log "Port 80 is available ✅"
+    fi
+}
+
+# Function to install Docker
+install_docker() {
+    info "Installing Docker..."
+    
+    # Update package index
+    sudo apt-get update
+    
+    # Install prerequisites
+    sudo apt-get install -y \
+        ca-certificates \
+        curl \
+        gnupg \
+        lsb-release
+    
+    # Add Docker's official GPG key
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    
+    # Add Docker repository
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    # Update package index again
+    sudo apt-get update
+    
+    # Install Docker Engine
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    
+    # Add current user to docker group
+    sudo usermod -aG docker $USER
+    
+    # Start and enable Docker service
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    
+    log "Docker installed successfully ✅"
+    warn "Please log out and log back in for Docker group changes to take effect"
+    warn "Or run: newgrp docker"
+}
+
+# Function to install Docker Compose (standalone)
+install_docker_compose() {
+    info "Installing Docker Compose standalone..."
+    
+    # Download latest Docker Compose
+    DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    sudo curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    
+    # Make it executable
+    sudo chmod +x /usr/local/bin/docker-compose
+    
+    # Create symlink for docker compose (if needed)
+    sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+    
+    log "Docker Compose installed successfully ✅"
+}
+
+# Check and install Docker if needed
 if ! command -v docker &> /dev/null; then
-    error "Docker is not installed or not accessible"
+    warn "Docker not found. Installing Docker..."
+    if [[ "$EUID" -eq 0 ]]; then
+        error "Please run this script as a regular user (not root). The script will use sudo when needed."
+    fi
+    
+    # Check if we're on Ubuntu/Debian
+    if ! command -v apt-get &> /dev/null; then
+        error "This installer currently supports Ubuntu/Debian systems only"
+    fi
+    
+    install_docker
+    
+    # Test Docker installation
+    if ! docker --version &> /dev/null; then
+        error "Docker installation failed"
+    fi
+else
+    log "Docker found ✅"
 fi
 
-if ! command -v docker compose &> /dev/null; then
-    error "Docker Compose is not installed or not accessible"
+# Check Docker Compose (plugin or standalone)
+if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+    warn "Docker Compose not found. Installing Docker Compose..."
+    install_docker_compose
+    
+    # Test installation
+    if ! docker compose version &> /dev/null && ! docker-compose --version &> /dev/null; then
+        error "Docker Compose installation failed"
+    fi
+else
+    log "Docker Compose found ✅"
+fi
+
+# Check if Docker daemon is running
+if ! docker info &> /dev/null; then
+    warn "Docker daemon not running. Starting Docker service..."
+    sudo systemctl start docker
+    sleep 3
+    
+    if ! docker info &> /dev/null; then
+        error "Failed to start Docker daemon. Please check Docker installation."
+    fi
+fi
+
+# Check if user is in docker group
+if ! groups $USER | grep -q docker; then
+    warn "User not in docker group. You may need to run commands with sudo or logout/login."
+    info "Adding user to docker group..."
+    sudo usermod -aG docker $USER
+    warn "Please run 'newgrp docker' or logout and login again for changes to take effect"
+    
+    # For the current session, we'll use sudo for docker commands if needed
+    DOCKER_CMD="sudo docker"
+    DOCKER_COMPOSE_CMD="sudo docker compose"
+else
+    DOCKER_CMD="docker"
+    DOCKER_COMPOSE_CMD="docker compose"
 fi
 
 log "Docker and Docker Compose verified ✅"
+
+# Check system requirements
+check_system_requirements
 
 # Verify required files
 if [ ! -f "docker-compose.prod.yml" ]; then
@@ -76,21 +224,21 @@ fi
 
 # Stop any running containers
 log "Stopping existing containers..."
-docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
 
 # Clean up development containers if present
-if docker compose ps -q &> /dev/null; then
+if $DOCKER_COMPOSE_CMD ps -q &> /dev/null; then
     warn "Stopping development environment..."
-    docker compose down --remove-orphans
+    $DOCKER_COMPOSE_CMD down --remove-orphans
 fi
 
 # Build images
 log "Building Docker images..."
-docker compose -f docker-compose.prod.yml build --no-cache
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml build --no-cache
 
 # Start services
 log "Starting production services..."
-docker compose -f docker-compose.prod.yml up -d
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml up -d
 
 # Wait for services to be ready
 log "Waiting for services to start..."
@@ -135,4 +283,4 @@ echo ""
 
 # Show initial logs
 info "Initial logs (Ctrl+C to exit):"
-docker compose -f docker-compose.prod.yml logs --tail=50 -f
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml logs --tail=50 -f

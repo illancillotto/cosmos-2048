@@ -13,24 +13,34 @@ A complete Web3 gaming experience that combines classic 2048 mechanics with the 
 
 ## 🚀 Quick Start
 
+### ⚡ One-Command Production Deployment
+
+For Ubuntu/Debian servers:
+
+```bash
+# Clone and install everything
+git clone https://github.com/your-repo/cosmos-2048.git
+cd cosmos-2048
+
+# Option 1: Full automated installation
+./install-dependencies.sh    # Installs Docker, tools, firewall
+./start-production.sh        # Deploys on port 80
+
+# Option 2: Quick production start (auto-installs Docker)
+./start-production.sh        # Handles Docker installation automatically
+```
+
+### 🛠️ Development Setup
+
 1. **Setup environment files:**
    ```bash
    cp apps/api/.env.example apps/api/.env
    cp apps/web/.env.example apps/web/.env
    ```
 
-2. **Start with Docker (Development):**
+2. **Start development environment:**
    ```bash
    docker compose up -d --build
-   ```
-
-   **Or start production (Port 80):**
-   ```bash
-   # Automatic startup with script
-   ./start-production.sh
-   
-   # Or manual
-   docker compose -f docker-compose.prod.yml up -d --build
    ```
 
 3. **Access the application:**
@@ -44,6 +54,13 @@ A complete Web3 gaming experience that combines classic 2048 mechanics with the 
    - 🌐 **Application**: http://localhost (port 80)
    - 🔍 **Health Check**: http://localhost/health
    - 📊 **API**: http://localhost/api/*
+
+### 🔍 Verify Installation
+
+```bash
+# Check if everything is properly installed and running
+./verify-installation.sh
+```
 
 ## 🏗️ Architecture
 
@@ -349,6 +366,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## 📚 Additional Documentation
 
+- **[QUICK_SETUP.md](./QUICK_SETUP.md)**: One-command production deployment guide
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)**: Complete deployment and production configuration guide
 - **[COSMOS_INTEGRATION_SUMMARY.md](./COSMOS_INTEGRATION_SUMMARY.md)**: Web3 implementation details
 - **[UI_IMPROVEMENTS_SUMMARY.md](./UI_IMPROVEMENTS_SUMMARY.md)**: UI/UX improvements documentation
