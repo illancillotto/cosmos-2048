@@ -1,30 +1,30 @@
 # ⚡ Quick Start Guide - Cosmos 2048
 
-## 🚀 Deployment Rapido (2 Comandi)
+## 🚀 Quick Deployment (2 Commands)
 
-### Step 1: Installazione Dipendenze
+### Step 1: Install Dependencies
 ```bash
-# Clona il repository
+# Clone the repository
 git clone <your-repo-url>
 cd cosmos-2048
 
-# Installa tutte le dipendenze (Docker, tools, etc.)
+# Install all dependencies (Docker, tools, etc.)
 ./setup-dependencies.sh
 ```
 
-### Step 2: Deploy Produzione
+### Step 2: Production Deploy
 ```bash
-# Logout/login per applicare modifiche gruppo docker
-# OPPURE esegui: newgrp docker
+# Logout/login to apply docker group changes
+# OR run: newgrp docker
 
-# Deploy automatico (rileva configurazione sistema)
+# Automatic deployment (detects system configuration)
 ./deploy-production.sh
 ```
 
-## 🎮 Accesso Applicazione
+## 🎮 Application Access
 
-Dopo il deployment:
-- **🎮 Gioco**: http://localhost
+After deployment:
+- **🎮 Game**: http://localhost
 - **🔍 Health Check**: http://localhost/health  
 - **📡 API**: http://localhost/api/*
 
@@ -88,29 +88,29 @@ docker compose -f docker-compose.prod.yml down        # Stop servizi
 
 ---
 
-## 📋 Requisiti Sistema
+## 📋 System Requirements
 
-### Minimi (Low-memory mode):
+### Minimum (Low-memory mode):
 - **OS**: Ubuntu 18.04+ / Debian 10+
-- **RAM**: 1GB (con swap automatico)
-- **Disk**: 10GB liberi
-- **Network**: Connessione internet
+- **RAM**: 1GB (with automatic swap)
+- **Disk**: 10GB free
+- **Network**: Internet connection
 
-### Raccomandati (Production mode):
+### Recommended (Production mode):
 - **RAM**: 2GB+
-- **Disk**: 20GB+ liberi
+- **Disk**: 20GB+ free
 - **CPU**: 2+ cores
 
-### Porte utilizzate:
+### Ports used:
 - **80**: HTTP (Nginx proxy)
-- **443**: HTTPS (quando SSL abilitato)
-- **3017, 5017, 27017**: Servizi interni
+- **443**: HTTPS (when SSL enabled)
+- **3017, 5017, 27017**: Internal services
 
 ---
 
-## 🔧 Risoluzione Problemi Comuni
+## 🔧 Common Problem Resolution
 
-### Docker non si avvia
+### Docker won't start
 ```bash
 ./quick-fix.sh fix-docker
 ```
@@ -120,19 +120,19 @@ docker compose -f docker-compose.prod.yml down        # Stop servizi
 ./quick-fix.sh restart
 ```
 
-### Memoria insufficiente
+### Insufficient memory
 ```bash
-# Il sistema auto-crea swap, ma puoi verificare:
+# System auto-creates swap, but you can verify:
 free -h
 swapon --show
 
-# Forza modalità memoria limitata:
+# Force low-memory mode:
 ./deploy-production.sh --force-low-memory
 ```
 
-### Porte occupate
+### Ports occupied
 ```bash
-# Verifica cosa usa porta 80:
+# Check what's using port 80:
 sudo ss -tulpn | grep :80
 
 # Stop common web servers:
@@ -160,45 +160,45 @@ NEXT_PUBLIC_ENABLE_NFT_MINTING=true
 
 ---
 
-## 🚀 Deployment Avanzato
+## 🚀 Advanced Deployment
 
 ### SSL/HTTPS Setup
 ```bash
-# Genera certificati self-signed per test:
+# Generate self-signed certificates for testing:
 mkdir -p ssl
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout ssl/private.key \
     -out ssl/cert.pem \
     -subj "/CN=yourdomain.com"
 
-# Attiva configurazione SSL:
+# Enable SSL configuration:
 cp nginx/nginx-ssl.conf nginx/nginx.conf
 docker compose -f docker-compose.prod.yml restart nginx
 ```
 
-### Monitoraggio Produzione
+### Production Monitoring
 ```bash
-# Stats in tempo reale:
+# Real-time stats:
 docker stats
 
-# Logs aggregati:
+# Aggregated logs:
 docker compose -f docker-compose.prod.yml logs -f
 
-# Health check automatico:
+# Automatic health check:
 watch -n 5 'curl -s http://localhost/health | jq .'
 ```
 
 ---
 
-## 🎉 Primo Avvio Completo
+## 🎉 Complete First Startup
 
 ```bash
-# Clone e setup completo
+# Clone and complete setup
 git clone <repo-url>
 cd cosmos-2048
 ./setup-dependencies.sh
 
-# Logout/login oppure:
+# Logout/login or:
 newgrp docker
 
 # Deploy
@@ -209,4 +209,4 @@ curl http://localhost/health
 open http://localhost
 ```
 
-**🎮 Il gioco è pronto!** Vai su http://localhost e inizia a giocare!
+**🎮 The game is ready!** Go to http://localhost and start playing!

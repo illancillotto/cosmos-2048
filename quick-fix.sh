@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # 🔧 Cosmos 2048 - Quick Fix & Troubleshooting
-# Script unificato per diagnosi e risoluzione rapida problemi
+# Unified script for diagnosis and quick problem resolution
 
 set -e
 
 echo "🔧 Cosmos 2048 - Quick Fix & Troubleshooting"
 echo "============================================="
 
-# Colori per output
+# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Funzioni per log
+# Logging functions
 log() { echo -e "${GREEN}[$(date +'%H:%M:%S')]${NC} $1"; }
 warn() { echo -e "${YELLOW}[$(date +'%H:%M:%S')] WARNING:${NC} $1"; }
 error() { echo -e "${RED}[$(date +'%H:%M:%S')] ERROR:${NC} $1"; }
@@ -33,27 +33,27 @@ detect_compose_file() {
 }
 
 COMPOSE_FILE=$(detect_compose_file)
-log "Rilevato file compose: $COMPOSE_FILE"
+log "Detected compose file: $COMPOSE_FILE"
 
 # Quick restart
 quick_restart() {
-    info "🔄 Riavvio rapido servizi..."
+    info "🔄 Quick restart of services..."
     
-    # Stop servizi web
+    # Stop web services
     docker compose -f $COMPOSE_FILE stop web nginx 2>/dev/null || true
     
-    # Pulizia rapida
+    # Quick cleanup
     docker system prune -f
     
-    # Riavvio
+    # Restart
     docker compose -f $COMPOSE_FILE up -d
     
-    log "Riavvio completato"
+    log "Restart completed"
 }
 
-# Diagnosi completa
+# Complete diagnosis
 diagnose() {
-    info "🔍 Diagnosi sistema..."
+    info "🔍 System diagnosis..."
     
     echo ""
     echo "📊 Container Status:"
@@ -86,7 +86,7 @@ diagnose() {
 
 # Fix Docker
 fix_docker() {
-    info "🔧 Riparazione Docker..."
+    info "🔧 Docker repair..."
     
     # Stop Docker
     sudo systemctl stop docker 2>/dev/null || true
@@ -103,24 +103,24 @@ fix_docker() {
     
     # Test
     if docker info &>/dev/null; then
-        log "Docker riparato ✅"
+        log "Docker repaired ✅"
     else
-        error "Riparazione Docker fallita"
+        error "Docker repair failed"
     fi
 }
 
-# Menu interattivo
+# Interactive menu
 show_menu() {
     echo ""
-    echo "Seleziona azione:"
+    echo "Select action:"
     echo "1) 🔄 Quick restart"
-    echo "2) 🔍 Diagnosi completa"
+    echo "2) 🔍 Complete diagnosis"
     echo "3) 🔧 Fix Docker"
-    echo "4) 📋 Mostra logs"
-    echo "5) 🧹 Pulizia profonda"
-    echo "6) ❌ Esci"
+    echo "4) 📋 Show logs"
+    echo "5) 🧹 Deep cleanup"
+    echo "6) ❌ Exit"
     echo ""
-    read -p "Scelta [1-6]: " -n 1 -r
+    read -p "Choice [1-6]: " -n 1 -r
     echo
     
     case $REPLY in
@@ -132,10 +132,10 @@ show_menu() {
             docker compose -f $COMPOSE_FILE down
             docker system prune -af
             docker volume prune -f
-            log "Pulizia completata"
+            log "Cleanup completed"
             ;;
         6) exit 0 ;;
-        *) warn "Opzione non valida" ;;
+        *) warn "Invalid option" ;;
     esac
 }
 
@@ -149,7 +149,7 @@ else
         fix-docker) fix_docker ;;
         logs) docker compose -f $COMPOSE_FILE logs -f ;;
         *) 
-            echo "Uso: $0 [restart|diagnose|fix-docker|logs]"
+            echo "Usage: $0 [restart|diagnose|fix-docker|logs]"
             exit 1
             ;;
     esac

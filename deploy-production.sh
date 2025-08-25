@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # 🚀 Cosmos 2048 - Production Deployment
-# Script unificato per il deployment in produzione
-# Supporta sia sistemi con memoria normale che limitata
+# Unified script for production deployment
+# Supports both normal and low-memory systems
 
 set -e
 
 echo "🚀 Cosmos 2048 - Production Deployment"
 echo "======================================"
 
-# Colori per output
+# Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -17,7 +17,7 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 NC='\033[0m'
 
-# Funzioni per log colorati
+# Colored logging functions
 log() {
     echo -e "${GREEN}[$(date +'%H:%M:%S')]${NC} $1"
 }
@@ -39,17 +39,17 @@ step() {
     echo -e "${PURPLE}[$(date +'%H:%M:%S')] STEP:${NC} $1"
 }
 
-# Configurazione globale
+# Global configuration
 COMPOSE_FILE=""
 DEPLOYMENT_TYPE=""
 MEMORY_MB=0
 LOW_MEMORY_THRESHOLD=2048
 
-# Funzione per rilevare tipo di deployment
+# Function to detect deployment type
 detect_deployment_type() {
-    info "Rilevamento configurazione sistema..."
+    info "Detecting system configuration..."
     
-    # Rilevamento memoria
+    # Memory detection
     MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}' 2>/dev/null || echo "0")
     if [ "$MEMORY_KB" -gt 0 ]; then
         MEMORY_MB=$((MEMORY_KB / 1024))
@@ -57,30 +57,30 @@ detect_deployment_type() {
         MEMORY_MB=$(free -m | grep '^Mem:' | awk '{print $2}' 2>/dev/null || echo "2048")
     fi
     
-    log "Memoria rilevata: ${MEMORY_MB}MB"
+    log "Detected memory: ${MEMORY_MB}MB"
     
-    # Scelta configurazione
+    # Configuration choice
     if [ $MEMORY_MB -lt $LOW_MEMORY_THRESHOLD ]; then
-        warn "Sistema con memoria limitata rilevato (${MEMORY_MB}MB)"
+        warn "Low-memory system detected (${MEMORY_MB}MB)"
         DEPLOYMENT_TYPE="low-memory"
         COMPOSE_FILE="docker-compose.low-memory.yml"
     else
-        log "Sistema con memoria normale (${MEMORY_MB}MB)"
+        log "Normal memory system detected (${MEMORY_MB}MB)"
         DEPLOYMENT_TYPE="production"
         COMPOSE_FILE="docker-compose.prod.yml"
     fi
     
-    # Possibilità di override manuale
+    # Manual override possibility
     echo ""
-    echo "Configurazione rilevata: $DEPLOYMENT_TYPE"
-    echo "File compose: $COMPOSE_FILE"
+    echo "Detected configuration: $DEPLOYMENT_TYPE"
+    echo "Compose file: $COMPOSE_FILE"
     echo ""
-    echo "Opzioni deployment:"
-    echo "1) Auto-rilevato: $DEPLOYMENT_TYPE"
-    echo "2) Produzione completa (raccomandato per >=2GB RAM)"
-    echo "3) Memoria limitata (per sistemi <2GB RAM)"
+    echo "Deployment options:"
+    echo "1) Auto-detected: $DEPLOYMENT_TYPE"
+    echo "2) Full production (recommended for >=2GB RAM)"
+    echo "3) Low memory (for systems <2GB RAM)"
     echo ""
-    read -p "Scegli configurazione [1-3] (default: 1): " -n 1 -r
+    read -p "Choose configuration [1-3] (default: 1): " -n 1 -r
     echo
     
     case $REPLY in
@@ -93,52 +93,52 @@ detect_deployment_type() {
             COMPOSE_FILE="docker-compose.low-memory.yml"
             ;;
         *)
-            # Mantiene auto-rilevato
+            # Keep auto-detected
             ;;
     esac
     
-    log "Configurazione selezionata: $DEPLOYMENT_TYPE"
-    log "File compose: $COMPOSE_FILE"
+    log "Selected configuration: $DEPLOYMENT_TYPE"
+    log "Compose file: $COMPOSE_FILE"
 }
 
-# Controllo prerequisiti
+# Check prerequisites
 check_prerequisites() {
-    step "Controllo prerequisiti..."
+    step "Checking prerequisites..."
     
     # Docker
     if ! command -v docker &> /dev/null; then
-        error "Docker non trovato. Esegui prima: ./setup-dependencies.sh"
+        error "Docker not found. Run first: ./setup-dependencies.sh"
     fi
     
     # Docker daemon
     if ! timeout 10 docker info &>/dev/null; then
-        error "Docker daemon non in esecuzione. Avvia Docker o esegui: ./fix-docker.sh"
+        error "Docker daemon not running. Start Docker or run: ./quick-fix.sh fix-docker"
     fi
     
-    log "Docker funzionante ✅"
+    log "Docker working ✅"
     
     # Docker Compose
     if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
-        error "Docker Compose non trovato"
+        error "Docker Compose not found"
     fi
     
-    log "Docker Compose disponibile ✅"
+    log "Docker Compose available ✅"
     
-    # File di configurazione
+    # Configuration file
     if [ ! -f "$COMPOSE_FILE" ]; then
-        error "File di configurazione $COMPOSE_FILE non trovato"
+        error "Configuration file $COMPOSE_FILE not found"
     fi
     
-    log "File di configurazione verificato ✅"
+    log "Configuration file verified ✅"
     
-    # Controllo porte
+    # Port check
     if ss -tulpn | grep -q ":80 " 2>/dev/null; then
-        warn "Porta 80 già in uso. Potrebbe essere necessario fermare altri web server."
-        echo "Per verificare: sudo ss -tulpn | grep :80"
-        echo "Per fermare Apache: sudo systemctl stop apache2"
-        echo "Per fermare Nginx: sudo systemctl stop nginx"
+        warn "Port 80 already in use. You may need to stop other web servers."
+        echo "To check: sudo ss -tulpn | grep :80"
+        echo "To stop Apache: sudo systemctl stop apache2"
+        echo "To stop Nginx: sudo systemctl stop nginx"
         echo ""
-        read -p "Continuare comunque? (y/N): " -n 1 -r
+        read -p "Continue anyway? (y/N): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 0
@@ -146,30 +146,30 @@ check_prerequisites() {
     fi
 }
 
-# Setup ambiente
+# Setup environment
 setup_environment() {
-    step "Configurazione ambiente..."
+    step "Setting up environment..."
     
-    # Creazione file .env se mancanti
+    # Create .env files if missing
     if [ ! -f "apps/api/.env" ]; then
         if [ -f "apps/api/.env.example" ]; then
             cp apps/api/.env.example apps/api/.env
-            log "File .env API creato da template"
+            log "API .env file created from template"
         else
-            warn "File .env.example API non trovato"
+            warn "API .env.example file not found"
         fi
     fi
     
     if [ ! -f "apps/web/.env.local" ]; then
         if [ -f "apps/web/.env.example" ]; then
             cp apps/web/.env.example apps/web/.env.local
-            log "File .env.local Frontend creato da template"
+            log "Frontend .env.local file created from template"
         else
-            warn "File .env.example Frontend non trovato"
+            warn "Frontend .env.example file not found"
         fi
     fi
     
-    # Generazione JWT_SECRET se necessario
+    # Generate JWT_SECRET if needed
     if ! grep -q "JWT_SECRET" apps/api/.env 2>/dev/null || grep -q "your-super-secure-jwt-secret" apps/api/.env 2>/dev/null; then
         JWT_SECRET=$(openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64 | tr -d '\n')
         if [ -f "apps/api/.env" ]; then
@@ -177,20 +177,20 @@ setup_environment() {
         else
             echo "JWT_SECRET=${JWT_SECRET}" >> apps/api/.env
         fi
-        log "JWT_SECRET generato e configurato ✅"
+        log "JWT_SECRET generated and configured ✅"
     fi
     
-    log "File di ambiente configurati ✅"
+    log "Environment files configured ✅"
 }
 
 # Setup swap per memoria limitata
 setup_swap_if_needed() {
     if [ "$DEPLOYMENT_TYPE" = "low-memory" ] && ! swapon --show | grep -q swap; then
-        step "Configurazione swap per memoria limitata..."
+        step "Setting up swap for low memory..."
         
         DISK_AVAIL_GB=$(df . | tail -1 | awk '{print int($4/1024/1024)}')
         if [ $DISK_AVAIL_GB -lt 2 ]; then
-            warn "Spazio disco insufficiente per swap (${DISK_AVAIL_GB}GB disponibili)"
+            warn "Insufficient disk space for swap (${DISK_AVAIL_GB}GB available)"
             return
         fi
         
@@ -208,141 +208,141 @@ setup_swap_if_needed() {
             echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
         fi
         
-        log "File swap da 1GB creato ✅"
+        log "1GB swap file created ✅"
     fi
 }
 
-# Pulizia container esistenti
+# Cleanup existing containers
 cleanup_existing() {
-    step "Pulizia container esistenti..."
+    step "Cleaning up existing containers..."
     
-    # Stop tutti i possibili compose file
+    # Stop all possible compose files
     docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
     docker compose -f docker-compose.low-memory.yml down --remove-orphans 2>/dev/null || true
     docker compose down --remove-orphans 2>/dev/null || true
     
-    # Pulizia container specifici se esistono
+    # Cleanup specific containers if they exist
     docker rm -f cosmos2048-nginx-prod cosmos2048-frontend-prod cosmos2048-api-prod cosmos2048-mongodb-prod 2>/dev/null || true
     docker rm -f cosmos2048-nginx-low-mem cosmos2048-frontend-low-mem cosmos2048-api-low-mem cosmos2048-mongodb-low-mem 2>/dev/null || true
     
-    # Pulizia risorse Docker per liberare spazio
+    # Cleanup Docker resources to free space
     docker system prune -f
     docker volume prune -f 2>/dev/null || true
     
-    log "Pulizia completata ✅"
+    log "Cleanup completed ✅"
 }
 
-# Build ottimizzato per memoria limitata
+# Build optimized for low memory
 build_low_memory() {
-    step "Build ottimizzato per memoria limitata..."
+    step "Build optimized for low memory..."
     
-    # Build sequenziale per evitare problemi di memoria
-    log "Build API service..."
+    # Sequential build to avoid memory issues
+    log "Building API service..."
     docker compose -f $COMPOSE_FILE build api
     docker builder prune -f
     
-    log "Build Frontend service..."
+    log "Building Frontend service..."
     docker compose -f $COMPOSE_FILE build web
     docker builder prune -f
     
-    log "Build completato ✅"
+    log "Build completed ✅"
 }
 
-# Build normale per produzione
+# Normal build for production
 build_production() {
-    step "Build produzione..."
+    step "Production build..."
     
-    # Build parallelo con cache
+    # Parallel build with cache
     docker compose -f $COMPOSE_FILE build --parallel
     
-    log "Build completato ✅"
+    log "Build completed ✅"
 }
 
-# Avvio servizi
+# Start services
 start_services() {
-    step "Avvio servizi..."
+    step "Starting services..."
     
     if [ "$DEPLOYMENT_TYPE" = "low-memory" ]; then
-        # Avvio sequenziale per memoria limitata
-        log "Avvio MongoDB..."
+        # Sequential startup for low memory
+        log "Starting MongoDB..."
         docker compose -f $COMPOSE_FILE up -d mongodb
         
-        # Attesa MongoDB
-        log "Attesa avvio MongoDB..."
+        # Wait for MongoDB
+        log "Waiting for MongoDB to start..."
         for i in {1..30}; do
             if docker exec cosmos2048-mongodb-low-mem mongosh --eval "db.adminCommand('ping')" &>/dev/null || \
                docker exec cosmos2048-mongodb-low-mem mongo --eval "db.adminCommand('ping')" &>/dev/null; then
-                log "MongoDB pronto ✅"
+                log "MongoDB ready ✅"
                 break
             fi
             if [ $i -eq 30 ]; then
-                error "MongoDB non si avvia"
+                error "MongoDB failed to start"
             fi
             sleep 2
         done
         
-        log "Avvio API..."
+        log "Starting API..."
         docker compose -f $COMPOSE_FILE up -d api
         sleep 5
         
-        log "Avvio Frontend..."
+        log "Starting Frontend..."
         docker compose -f $COMPOSE_FILE up -d web
         sleep 10
         
-        log "Avvio Nginx..."
+        log "Starting Nginx..."
         docker compose -f $COMPOSE_FILE up -d nginx
         
     else
-        # Avvio normale per produzione
+        # Normal startup for production
         docker compose -f $COMPOSE_FILE up -d
     fi
     
-    log "Servizi avviati ✅"
+    log "Services started ✅"
 }
 
-# Health check esteso
+# Extended health check
 health_check() {
-    step "Verifica stato servizi..."
+    step "Verifying service status..."
     
-    # Attesa stabilizzazione
-    log "Attesa stabilizzazione servizi..."
+    # Wait for stabilization
+    log "Waiting for services to stabilize..."
     sleep 15
     
-    # Controllo container
+    # Container status
     echo ""
-    info "Stato container:"
+    info "Container status:"
     docker compose -f $COMPOSE_FILE ps
     
     echo ""
-    info "Uso risorse:"
+    info "Resource usage:"
     docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
     
-    # Health check API
+    # API health check
     echo ""
-    log "Test connettività API..."
+    log "Testing API connectivity..."
     for i in {1..30}; do
         if curl -f -m 10 http://localhost/health &>/dev/null; then
-            log "✅ API Backend: FUNZIONANTE"
+            log "✅ API Backend: WORKING"
             break
         fi
         if [ $i -eq 30 ]; then
-            warn "❌ API Backend: TIMEOUT (ma potrebbe ancora avviarsi)"
+            warn "❌ API Backend: TIMEOUT (but may still be starting)"
         fi
         sleep 3
     done
     
-    # Health check Frontend
-    log "Test connettività Frontend..."
+    # Frontend health check
+    log "Testing Frontend connectivity..."
     for i in {1..30}; do
         if curl -f -m 15 http://localhost/ &>/dev/null; then
-            log "✅ Frontend: FUNZIONANTE"
+            log "✅ Frontend: WORKING"
             break
         fi
         if [ $i -eq 30 ]; then
-            warn "❌ Frontend: TIMEOUT (ma potrebbe ancora avviarsi)"
-            # Tentativo riavvio aggressivo per memoria limitata
+            warn "❌ Frontend: TIMEOUT (but may still be starting)"
+            # Aggressive restart attempt for low memory
             if [ "$DEPLOYMENT_TYPE" = "low-memory" ]; then
-                log "Tentativo riavvio aggressivo frontend..."
+                log "Attempting aggressive frontend restart..."
                 docker compose -f $COMPOSE_FILE stop web
                 docker system prune -f
                 sleep 5
@@ -350,9 +350,9 @@ health_check() {
                 sleep 20
                 
                 if curl -f -m 20 http://localhost/ &>/dev/null; then
-                    log "✅ Frontend: FUNZIONANTE dopo riavvio"
+                    log "✅ Frontend: WORKING after restart"
                 else
-                    warn "❌ Frontend: ancora non risponde"
+                    warn "❌ Frontend: still not responding"
                 fi
             fi
         fi
@@ -360,77 +360,77 @@ health_check() {
     done
 }
 
-# Informazioni finali
+# Final information
 show_final_info() {
     echo ""
-    echo "🎉 ${GREEN}Cosmos 2048 Deployment Completato!${NC}"
+    echo "🎉 ${GREEN}Cosmos 2048 Deployment Completed!${NC}"
     echo "=================================================="
     echo ""
-    echo "📊 Configurazione:"
-    echo "   Tipo: $DEPLOYMENT_TYPE"
-    echo "   Memoria: ${MEMORY_MB}MB"
-    echo "   File compose: $COMPOSE_FILE"
+    echo "📊 Configuration:"
+    echo "   Type: $DEPLOYMENT_TYPE"
+    echo "   Memory: ${MEMORY_MB}MB"
+    echo "   Compose file: $COMPOSE_FILE"
     echo ""
-    echo "🌐 Accesso Applicazione:"
-    echo "   🎮 Gioco: http://localhost"
+    echo "🌐 Application Access:"
+    echo "   🎮 Game: http://localhost"
     echo "   🔍 Health Check: http://localhost/health"
     echo "   📡 API: http://localhost/api/*"
     echo ""
-    echo "🔧 Comandi Utili:"
+    echo "🔧 Useful Commands:"
     echo "   📋 Logs: docker compose -f $COMPOSE_FILE logs -f"
     echo "   📊 Status: docker compose -f $COMPOSE_FILE ps"
     echo "   ⏹️  Stop: docker compose -f $COMPOSE_FILE down"
     echo "   🔄 Restart: docker compose -f $COMPOSE_FILE restart"
     echo ""
     echo "🎯 Debugging:"
-    echo "   🔍 Diagnosi: ./diagnose-issue.sh"
-    echo "   🔄 Quick restart: ./quick-restart.sh"
-    echo "   🔧 Fix Docker: ./fix-docker.sh"
+    echo "   🔍 Diagnosis: ./quick-fix.sh diagnose"
+    echo "   🔄 Quick restart: ./quick-fix.sh restart"
+    echo "   🔧 Fix Docker: ./quick-fix.sh fix-docker"
     echo ""
     
-    # Statistiche memoria per deployment low-memory
+    # Memory statistics for low-memory deployment
     if [ "$DEPLOYMENT_TYPE" = "low-memory" ]; then
         MEMORY_USED=$(free -m | grep '^Mem:' | awk '{print $3}')
         MEMORY_PERCENT=$((MEMORY_USED * 100 / MEMORY_MB))
-        echo "💾 Uso Memoria: ${MEMORY_USED}MB / ${MEMORY_MB}MB (${MEMORY_PERCENT}%)"
+        echo "💾 Memory Usage: ${MEMORY_USED}MB / ${MEMORY_MB}MB (${MEMORY_PERCENT}%)"
         if [ $MEMORY_PERCENT -gt 85 ]; then
-            warn "Uso memoria alto. Monitora prestazioni sistema."
+            warn "High memory usage. Monitor system performance."
         fi
         echo ""
-        echo "⚡ Ottimizzazioni Applicate:"
-        echo "   - Build sequenziali container"
-        echo "   - Limiti memoria per tutti i servizi"
-        echo "   - Cache MongoDB limitata a 256MB"
-        echo "   - Node.js heap limitato a 256MB"
-        echo "   - Swap attivato"
+        echo "⚡ Optimizations Applied:"
+        echo "   - Sequential container builds"
+        echo "   - Memory limits for all services"
+        echo "   - MongoDB cache limited to 256MB"
+        echo "   - Node.js heap limited to 256MB"
+        echo "   - Swap activated"
     fi
 }
 
-# Gestione errori
+# Error handling
 handle_error() {
-    error "Deployment fallito durante: $1"
+    error "Deployment failed during: $1"
     echo ""
-    echo "🔍 Suggerimenti per debugging:"
-    echo "1. Controlla log: docker compose -f $COMPOSE_FILE logs"
-    echo "2. Verifica spazio disco: df -h"
-    echo "3. Verifica memoria: free -h"
-    echo "4. Esegui diagnosi: ./diagnose-issue.sh"
-    echo "5. Prova riparazione Docker: ./fix-docker.sh"
+    echo "🔍 Debugging suggestions:"
+    echo "1. Check logs: docker compose -f $COMPOSE_FILE logs"
+    echo "2. Verify disk space: df -h"
+    echo "3. Verify memory: free -h"
+    echo "4. Run diagnosis: ./quick-fix.sh diagnose"
+    echo "5. Try Docker repair: ./quick-fix.sh fix-docker"
 }
 
-# Trap per gestire errori
-trap 'handle_error "step corrente"' ERR
+# Trap to handle errors
+trap 'handle_error "current step"' ERR
 
-# Funzione principale
+# Main function
 main() {
-    log "Inizio deployment Cosmos 2048..."
+    log "Starting Cosmos 2048 deployment..."
     
-    # Controllo se siamo nella directory corretta
+    # Check if we're in the correct directory
     if [ ! -f "package.json" ] && [ ! -d "apps" ]; then
-        error "Esegui questo script dalla directory root del progetto"
+        error "Run this script from the project root directory"
     fi
     
-    # Steps principali
+    # Main steps
     detect_deployment_type
     check_prerequisites
     setup_environment
@@ -447,10 +447,10 @@ main() {
     health_check
     show_final_info
     
-    log "Deployment completato con successo! 🎉"
+    log "Deployment completed successfully! 🎉"
 }
 
-# Controllo parametri da linea di comando
+# Command line parameter check
 case "${1:-}" in
     --force-production)
         DEPLOYMENT_TYPE="production"
@@ -461,16 +461,16 @@ case "${1:-}" in
         COMPOSE_FILE="docker-compose.low-memory.yml"
         ;;
     --help|-h)
-        echo "Uso: $0 [opzioni]"
+        echo "Usage: $0 [options]"
         echo ""
-        echo "Opzioni:"
-        echo "  --force-production   Forza deployment produzione completa"
-        echo "  --force-low-memory   Forza deployment memoria limitata"
-        echo "  --help, -h          Mostra questo aiuto"
+        echo "Options:"
+        echo "  --force-production   Force full production deployment"
+        echo "  --force-low-memory   Force low-memory deployment"
+        echo "  --help, -h          Show this help"
         echo ""
         exit 0
         ;;
 esac
 
-# Esecuzione funzione principale
+# Run main function
 main "$@"
