@@ -38,8 +38,14 @@ check_system_requirements() {
     info "Checking system requirements..."
     
     # Check available memory (at least 2GB recommended)
-    MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    MEMORY_GB=$((MEMORY_KB / 1024 / 1024))
+    MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}' 2>/dev/null || echo "0")
+    if [ "$MEMORY_KB" -gt 0 ]; then
+        MEMORY_GB=$((MEMORY_KB / 1024 / 1024))
+    else
+        # Fallback method
+        MEMORY_MB=$(free -m | grep '^Mem:' | awk '{print $2}' 2>/dev/null || echo "0")
+        MEMORY_GB=$((MEMORY_MB / 1024))
+    fi
     
     if [ $MEMORY_GB -lt 2 ]; then
         warn "System has ${MEMORY_GB}GB RAM. Minimum 2GB recommended for production."
