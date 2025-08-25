@@ -161,15 +161,108 @@ else
     log "Docker Compose found ✅"
 fi
 
+# Function to start Docker daemon
+start_docker_daemon() {
+    warn "Docker daemon not running. Attempting to start..."
+    
+    # Try to start Docker service
+    if sudo systemctl start docker; then
+        log "Docker service start command executed"
+    else
+        warn "systemctl start docker failed, trying alternative methods..."
+    fi
+    
+    # Wait a bit longer for Docker to start
+    sleep 5
+    
+    # Check if Docker started
+    if docker info &> /dev/null; then
+        log "Docker daemon started successfully ✅"
+        return 0
+    fi
+    
+    # Try enabling Docker service
+    warn "Docker still not running. Trying to enable Docker service..."
+    sudo systemctl enable docker
+    sudo systemctl start docker
+    sleep 5
+    
+    if docker info &> /dev/null; then
+        log "Docker daemon started after enabling service ✅"
+        return 0
+    fi
+    
+    # Check Docker service status
+    warn "Checking Docker service status..."
+    sudo systemctl status docker --no-pager -l
+    
+    # Try to restart Docker
+    warn "Attempting Docker restart..."
+    sudo systemctl restart docker
+    sleep 8
+    
+    if docker info &> /dev/null; then
+        log "Docker daemon started after restart ✅"
+        return 0
+    fi
+    
+    # Check for common issues
+    warn "Diagnosing Docker daemon issues..."
+    
+    # Check if Docker socket exists
+    if [ ! -S /var/run/docker.sock ]; then
+        warn "Docker socket not found at /var/run/docker.sock"
+    fi
+    
+    # Check Docker logs
+    warn "Recent Docker daemon logs:"
+    sudo journalctl -u docker.service --lines=10 --no-pager
+    
+    # Try manual Docker daemon start (as last resort)
+    warn "Attempting manual Docker daemon start..."
+    if sudo dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &>/dev/null &
+    then
+        DOCKER_PID=$!
+        sleep 5
+        if docker info &> /dev/null; then
+            log "Docker daemon started manually ✅"
+            return 0
+        else
+            # Kill the manual daemon if it didn't work
+            sudo kill $DOCKER_PID 2>/dev/null || true
+        fi
+    fi
+    
+    # Final troubleshooting suggestions
+    error "Failed to start Docker daemon. 
+
+🔧 QUICK FIX: Run the Docker troubleshooting script:
+   ./fix-docker.sh
+
+Or try these manual troubleshooting steps:
+
+1. Check Docker service status:
+   sudo systemctl status docker
+
+2. Check system logs for errors:
+   sudo journalctl -u docker.service --lines=20
+
+3. Try restarting Docker service:
+   sudo systemctl restart docker
+
+4. Check if there are permission issues:
+   sudo chown root:docker /var/run/docker.sock
+   sudo chmod 660 /var/run/docker.sock
+
+5. If all else fails, reboot the system:
+   sudo reboot
+
+For detailed diagnostics: ./verify-installation.sh"
+}
+
 # Check if Docker daemon is running
 if ! docker info &> /dev/null; then
-    warn "Docker daemon not running. Starting Docker service..."
-    sudo systemctl start docker
-    sleep 3
-    
-    if ! docker info &> /dev/null; then
-        error "Failed to start Docker daemon. Please check Docker installation."
-    fi
+    start_docker_daemon
 fi
 
 # Check if user is in docker group
