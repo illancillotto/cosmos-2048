@@ -141,12 +141,7 @@ $RECYCLE.BIN/
 
 # ===== DOCKER =====
 # Docker files
-.dockerignore
-docker-compose.override.yml
-docker-compose.*.yml
-!docker-compose.yml
-!docker-compose.prod.yml
-!docker-compose.low-memory.yml
+.dockerignore 
 
 # Docker volumes
 docker-volumes/
