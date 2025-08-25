@@ -28,35 +28,49 @@ export const spawnRandomTile = (board) => {
   return newBoard;
 };
 
-const moveLeft = (row) => {
+const moveLeft = (row, rowIndex) => {
   const filtered = row.filter(val => val !== 0);
   const merged = [];
+  const mergePositions = [];
   let gained = 0;
   let i = 0;
+  let targetIndex = 0;
   
   while (i < filtered.length) {
     if (i < filtered.length - 1 && filtered[i] === filtered[i + 1]) {
       const mergedValue = filtered[i] * 2;
       merged.push(mergedValue);
+      mergePositions.push({ 
+        row: rowIndex, 
+        col: targetIndex, 
+        value: mergedValue, 
+        oldValue: filtered[i] 
+      });
       gained += mergedValue;
       i += 2;
     } else {
       merged.push(filtered[i]);
       i += 1;
     }
+    targetIndex++;
   }
   
   while (merged.length < BOARD_SIZE) {
     merged.push(0);
   }
   
-  return { row: merged, gained };
+  return { row: merged, gained, mergePositions };
 };
 
-const moveRight = (row) => {
+const moveRight = (row, rowIndex) => {
   const reversed = [...row].reverse();
-  const { row: moved, gained } = moveLeft(reversed);
-  return { row: moved.reverse(), gained };
+  const { row: moved, gained, mergePositions } = moveLeft(reversed, rowIndex);
+  // Adjust column positions for right movement
+  const adjustedMergePositions = mergePositions.map(pos => ({
+    ...pos,
+    col: BOARD_SIZE - 1 - pos.col
+  }));
+  return { row: moved.reverse(), gained, mergePositions: adjustedMergePositions };
 };
 
 const transposeBoard = (board) => {
@@ -67,12 +81,14 @@ export const move = (board, direction) => {
   let newBoard;
   let totalGained = 0;
   let moved = false;
+  let allMergePositions = [];
   
   switch (direction) {
     case 'left':
-      newBoard = board.map(row => {
-        const { row: newRow, gained } = moveLeft(row);
+      newBoard = board.map((row, rowIndex) => {
+        const { row: newRow, gained, mergePositions } = moveLeft(row, rowIndex);
         totalGained += gained;
+        allMergePositions.push(...mergePositions);
         if (JSON.stringify(row) !== JSON.stringify(newRow)) {
           moved = true;
         }
@@ -81,9 +97,10 @@ export const move = (board, direction) => {
       break;
       
     case 'right':
-      newBoard = board.map(row => {
-        const { row: newRow, gained } = moveRight(row);
+      newBoard = board.map((row, rowIndex) => {
+        const { row: newRow, gained, mergePositions } = moveRight(row, rowIndex);
         totalGained += gained;
+        allMergePositions.push(...mergePositions);
         if (JSON.stringify(row) !== JSON.stringify(newRow)) {
           moved = true;
         }
@@ -93,9 +110,16 @@ export const move = (board, direction) => {
       
     case 'up':
       const transposed = transposeBoard(board);
-      const upResult = transposed.map(row => {
-        const { row: newRow, gained } = moveLeft(row);
+      const upResult = transposed.map((row, rowIndex) => {
+        const { row: newRow, gained, mergePositions } = moveLeft(row, rowIndex);
         totalGained += gained;
+        // Transform positions back from transposed coordinates
+        const transformedPositions = mergePositions.map(pos => ({
+          ...pos,
+          row: pos.col,
+          col: pos.row
+        }));
+        allMergePositions.push(...transformedPositions);
         return newRow;
       });
       newBoard = transposeBoard(upResult);
@@ -104,9 +128,16 @@ export const move = (board, direction) => {
       
     case 'down':
       const transposedDown = transposeBoard(board);
-      const downResult = transposedDown.map(row => {
-        const { row: newRow, gained } = moveRight(row);
+      const downResult = transposedDown.map((row, rowIndex) => {
+        const { row: newRow, gained, mergePositions } = moveRight(row, rowIndex);
         totalGained += gained;
+        // Transform positions back from transposed coordinates
+        const transformedPositions = mergePositions.map(pos => ({
+          ...pos,
+          row: pos.col,
+          col: pos.row
+        }));
+        allMergePositions.push(...transformedPositions);
         return newRow;
       });
       newBoard = transposeBoard(downResult);
@@ -114,10 +145,10 @@ export const move = (board, direction) => {
       break;
       
     default:
-      return { board, moved: false, gained: 0 };
+      return { board, moved: false, gained: 0, mergePositions: [] };
   }
   
-  return { board: newBoard, moved, gained: totalGained };
+  return { board: newBoard, moved, gained: totalGained, mergePositions: allMergePositions };
 };
 
 export const canMove = (board) => {
