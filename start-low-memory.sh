@@ -33,13 +33,35 @@ info() {
     echo -e "${BLUE}[$(date +'%H:%M:%S')] INFO:${NC} $1"
 }
 
+# Check if running as root
+if [[ "$EUID" -eq 0 ]]; then
+    warn "⚠️  Running as ROOT user detected!"
+    warn "   This is not recommended for security reasons."
+    warn "   Docker containers will run with elevated privileges."
+    warn "   Consider running as a regular user with sudo access."
+    echo ""
+    read -p "Do you want to continue as root? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        info "Execution cancelled. Run as regular user for better security."
+        exit 0
+    fi
+    warn "Continuing as root user..."
+    echo ""
+fi
+
 # Check Docker
 if ! command -v docker &> /dev/null; then
     error "Docker is not installed. Please run ./install-dependencies.sh first"
 fi
 
 if ! docker info &> /dev/null; then
-    error "Docker daemon is not running. Please start Docker: sudo systemctl start docker"
+    if [[ "$EUID" -eq 0 ]]; then
+        # Try to start Docker as root
+        systemctl start docker || error "Failed to start Docker daemon"
+    else
+        error "Docker daemon is not running. Please start Docker: sudo systemctl start docker"
+    fi
 fi
 
 # Memory optimization settings
@@ -66,14 +88,26 @@ setup_swap() {
             return
         fi
         
-        # Create swap file
-        sudo fallocate -l 1G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        
-        # Make it permanent
-        echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+        # Create swap file (adjust commands based on user)
+        if [[ "$EUID" -eq 0 ]]; then
+            # Running as root - direct commands
+            fallocate -l 1G /swapfile || dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            
+            # Make it permanent
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        else
+            # Running as regular user - use sudo
+            sudo fallocate -l 1G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            
+            # Make it permanent
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+        fi
         
         log "1GB swap file created and activated ✅"
     else

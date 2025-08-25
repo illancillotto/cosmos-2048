@@ -62,6 +62,22 @@ cd cosmos-2048
 ./verify-installation.sh
 ```
 
+### 🔐 Root User Support
+
+All scripts support execution as root user with security warnings:
+
+```bash
+# Scripts will prompt for confirmation when run as root
+sudo ./start-production.sh  # Shows security warning
+./start-production.sh       # If already root
+
+# For security best practices, use regular user:
+su - username
+./start-production.sh       # Recommended approach
+```
+
+See [ROOT_USER_GUIDE.md](./ROOT_USER_GUIDE.md) for complete security guidelines.
+
 ## 🏗️ Architecture
 
 ### Development

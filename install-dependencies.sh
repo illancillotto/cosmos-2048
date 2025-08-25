@@ -33,9 +33,32 @@ info() {
     echo -e "${BLUE}[$(date +'%H:%M:%S')] INFO:${NC} $1"
 }
 
+# Helper function to run commands with or without sudo
+run_cmd() {
+    if [[ "$EUID" -eq 0 ]]; then
+        # Running as root - execute directly
+        "$@"
+    else
+        # Running as regular user - use sudo
+        sudo "$@"
+    fi
+}
+
 # Check if running as root
 if [[ "$EUID" -eq 0 ]]; then
-    error "Please run this script as a regular user (not root). The script will use sudo when needed."
+    warn "⚠️  Running as ROOT user detected!"
+    warn "   This is generally not recommended for security reasons."
+    warn "   System modifications will be applied directly without sudo."
+    warn "   Consider running as a regular user with sudo access."
+    echo ""
+    read -p "Do you want to continue as root? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        info "Installation cancelled. Run as regular user for better security."
+        exit 0
+    fi
+    warn "Continuing as root user..."
+    echo ""
 fi
 
 # Detect OS
@@ -56,11 +79,11 @@ fi
 
 # Update system packages
 log "Updating system packages..."
-sudo apt-get update
+run_cmd apt-get update
 
 # Install basic dependencies
 log "Installing basic dependencies..."
-sudo apt-get install -y \
+run_cmd apt-get install -y \
     curl \
     wget \
     ca-certificates \

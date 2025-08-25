@@ -132,12 +132,26 @@ install_docker_compose() {
     log "Docker Compose installed successfully ✅"
 }
 
+# Check if running as root
+if [[ "$EUID" -eq 0 ]]; then
+    warn "⚠️  Running as ROOT user detected!"
+    warn "   This is not recommended for security reasons."
+    warn "   Docker containers will run with root privileges."
+    warn "   Consider running as a regular user with sudo access."
+    echo ""
+    read -p "Do you want to continue as root? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        info "Execution cancelled. Run as regular user for better security."
+        exit 0
+    fi
+    warn "Continuing as root user..."
+    echo ""
+fi
+
 # Check and install Docker if needed
 if ! command -v docker &> /dev/null; then
     warn "Docker not found. Installing Docker..."
-    if [[ "$EUID" -eq 0 ]]; then
-        error "Please run this script as a regular user (not root). The script will use sudo when needed."
-    fi
     
     # Check if we're on Ubuntu/Debian
     if ! command -v apt-get &> /dev/null; then
@@ -271,19 +285,27 @@ if ! docker info &> /dev/null; then
     start_docker_daemon
 fi
 
-# Check if user is in docker group
-if ! groups $USER | grep -q docker; then
-    warn "User not in docker group. You may need to run commands with sudo or logout/login."
-    info "Adding user to docker group..."
-    sudo usermod -aG docker $USER
-    warn "Please run 'newgrp docker' or logout and login again for changes to take effect"
-    
-    # For the current session, we'll use sudo for docker commands if needed
-    DOCKER_CMD="sudo docker"
-    DOCKER_COMPOSE_CMD="sudo docker compose"
-else
+# Set Docker commands based on user
+if [[ "$EUID" -eq 0 ]]; then
+    # Running as root - use direct commands
     DOCKER_CMD="docker"
     DOCKER_COMPOSE_CMD="docker compose"
+    log "Using direct Docker commands (running as root)"
+else
+    # Check if user is in docker group
+    if ! groups $USER | grep -q docker; then
+        warn "User not in docker group. You may need to run commands with sudo or logout/login."
+        info "Adding user to docker group..."
+        sudo usermod -aG docker $USER
+        warn "Please run 'newgrp docker' or logout and login again for changes to take effect"
+        
+        # For the current session, we'll use sudo for docker commands if needed
+        DOCKER_CMD="sudo docker"
+        DOCKER_COMPOSE_CMD="sudo docker compose"
+    else
+        DOCKER_CMD="docker"
+        DOCKER_COMPOSE_CMD="docker compose"
+    fi
 fi
 
 log "Docker and Docker Compose verified ✅"
