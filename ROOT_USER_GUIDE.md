@@ -33,13 +33,10 @@ Do you want to continue as root? (y/N):
 
 ### **Scripts that support root execution:**
 
-1. **`./start-production.sh`** - Production deployment
-2. **`./start-low-memory.sh`** - Low memory deployment  
-3. **`./install-dependencies.sh`** - Dependency installation
-4. **`./fix-docker.sh`** - Docker troubleshooting
-5. **`./verify-installation.sh`** - Installation verification
-6. **`./diagnose-issue.sh`** - Issue diagnosis
-7. **`./quick-restart.sh`** - Quick service restart
+1. **`./deploy-production.sh`** - Production deployment
+2. **`./setup-dependencies.sh`** - Dependency installation
+3. **`./quick-fix.sh`** - Troubleshooting and management
+4. **`docker compose -f docker-compose.dev.yml up -d`** - Development environment
 
 ## 💡 Best Practices
 
@@ -51,7 +48,7 @@ usermod -aG sudo cosmos2048
 su - cosmos2048
 
 # Then run scripts normally
-./start-production.sh
+./deploy-production.sh
 ```
 
 ### **Root Execution (When Necessary):**
@@ -59,14 +56,14 @@ su - cosmos2048
 # Run as root with confirmation
 sudo su -
 cd /path/to/cosmos-2048
-./start-production.sh
+./deploy-production.sh
 # Answer 'y' to the security warning
 ```
 
 ### **Alternative Approach:**
 ```bash
 # Run specific commands as root when needed
-sudo ./start-production.sh
+sudo ./deploy-production.sh
 # The script will detect you're using sudo and handle accordingly
 ```
 
@@ -98,7 +95,7 @@ whoami
 su - username
 
 # To run single command as regular user:
-su -c "./start-production.sh" username
+su -c "./deploy-production.sh" username
 
 # To see effective user ID:
 id
@@ -139,6 +136,34 @@ df -h
 docker system prune -a
 ```
 
+## 🎯 Environment Management
+
+### **Development Environment:**
+```bash
+# Start development (as root or regular user)
+docker compose -f docker-compose.dev.yml up -d
+
+# Access: http://localhost:3017 (Frontend), http://localhost:5017 (API)
+```
+
+### **Production Environment:**
+```bash
+# Deploy production (as root or regular user)
+./deploy-production.sh
+
+# Access: http://localhost (Main app)
+```
+
+### **Environment Switching:**
+```bash
+# Use quick-fix script
+./quick-fix.sh switch
+
+# Or manually
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.dev.yml up -d
+```
+
 ---
 
 ## ⚖️ Security vs Convenience
@@ -154,3 +179,33 @@ docker system prune -a
 | 🐳 **Container/VM** | Root OK (isolated environment) |
 
 **Remember: The scripts will always warn you about security implications when running as root!** 🛡️
+
+---
+
+## 🚀 Quick Commands Reference
+
+### **As Regular User:**
+```bash
+# Development
+docker compose -f docker-compose.dev.yml up -d
+
+# Production
+./deploy-production.sh
+
+# Troubleshooting
+./quick-fix.sh diagnose
+```
+
+### **As Root User:**
+```bash
+# Development
+docker compose -f docker-compose.dev.yml up -d
+
+# Production
+./deploy-production.sh
+
+# Troubleshooting
+./quick-fix.sh diagnose
+```
+
+**Both approaches work, but regular user + sudo is recommended for security!**

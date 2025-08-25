@@ -2,7 +2,7 @@
 
 # 🛠️ Cosmos 2048 - Setup Dependencies
 # Installs all necessary dependencies for deployment
-# Supports Ubuntu/Debian and low-memory configurations
+# Supports Ubuntu/Debian systems
 
 set -e
 
@@ -238,10 +238,10 @@ configure_firewall() {
     run_cmd ufw allow 80
     run_cmd ufw allow 443
     
-    # Development ports (optional - commented for security)
-    # run_cmd ufw allow 3017  # Frontend dev
-    # run_cmd ufw allow 5017  # API dev
-    # run_cmd ufw allow 27018 # MongoDB dev
+    # Development ports
+    run_cmd ufw allow 3017  # Frontend dev
+    run_cmd ufw allow 5017  # API dev
+    run_cmd ufw allow 27018 # MongoDB dev
     
     log "Firewall configured ✅"
 }
@@ -308,37 +308,6 @@ setup_env_files() {
     fi
 }
 
-# Optimizations for low-memory systems
-optimize_for_low_memory() {
-    if [ $MEMORY_MB -lt 2048 ]; then
-        info "Low-memory system detected (${MEMORY_MB}MB). Applying optimizations..."
-        
-        # Docker configuration for low memory
-        if [ ! -f "/etc/docker/daemon.json" ]; then
-            run_cmd mkdir -p /etc/docker
-            cat > /tmp/docker-daemon.json << 'EOF'
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  },
-  "default-ulimits": {
-    "nofile": {
-      "Name": "nofile",
-      "Hard": 64000,
-      "Soft": 64000
-    }
-  }
-}
-EOF
-            run_cmd mv /tmp/docker-daemon.json /etc/docker/daemon.json
-            run_cmd systemctl restart docker
-            log "Docker configuration optimized for low memory ✅"
-        fi
-    fi
-}
-
 # Main function
 main() {
     log "Starting Cosmos 2048 dependencies installation..."
@@ -387,9 +356,6 @@ main() {
     # Setup swap
     setup_swap
     
-    # Memory optimizations
-    optimize_for_low_memory
-    
     # Environment files
     setup_env_files
     
@@ -408,7 +374,8 @@ main() {
     echo "🔄 Next Steps:"
     echo "1. If not root: logout and login to apply docker group changes"
     echo "2. Or run: newgrp docker"
-    echo "3. Start production: ./deploy-production.sh"
+    echo "3. Start development: docker compose -f docker-compose.dev.yml up -d"
+    echo "4. Start production: ./deploy-production.sh"
     echo ""
     
     # Check if reboot is needed

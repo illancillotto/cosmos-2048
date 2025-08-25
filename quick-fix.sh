@@ -23,10 +23,10 @@ info() { echo -e "${BLUE}[$(date +'%H:%M:%S')] INFO:${NC} $1"; }
 
 # Auto-detect compose file
 detect_compose_file() {
-    if docker compose -f docker-compose.low-memory.yml ps --services &>/dev/null; then
-        echo "docker-compose.low-memory.yml"
-    elif docker compose -f docker-compose.prod.yml ps --services &>/dev/null; then
+    if docker compose -f docker-compose.prod.yml ps --services &>/dev/null; then
         echo "docker-compose.prod.yml"
+    elif docker compose -f docker-compose.dev.yml ps --services &>/dev/null; then
+        echo "docker-compose.dev.yml"
     else
         echo "docker-compose.yml"
     fi
@@ -39,7 +39,7 @@ log "Detected compose file: $COMPOSE_FILE"
 quick_restart() {
     info "🔄 Quick restart of services..."
     
-    # Stop web services
+    # Stop services
     docker compose -f $COMPOSE_FILE stop web nginx 2>/dev/null || true
     
     # Quick cleanup
@@ -109,6 +109,43 @@ fix_docker() {
     fi
 }
 
+# Switch environment
+switch_environment() {
+    info "🔄 Switching environment..."
+    
+    echo ""
+    echo "Current environment: $COMPOSE_FILE"
+    echo ""
+    echo "Available environments:"
+    echo "1) Development (docker-compose.dev.yml)"
+    echo "2) Production (docker-compose.prod.yml)"
+    echo ""
+    read -p "Choose environment [1-2]: " -n 1 -r
+    echo
+    
+    case $REPLY in
+        1)
+            NEW_COMPOSE="docker-compose.dev.yml"
+            ;;
+        2)
+            NEW_COMPOSE="docker-compose.prod.yml"
+            ;;
+        *)
+            warn "Invalid option, keeping current environment"
+            return
+            ;;
+    esac
+    
+    if [ "$COMPOSE_FILE" != "$NEW_COMPOSE" ]; then
+        log "Switching to $NEW_COMPOSE..."
+        docker compose -f $COMPOSE_FILE down 2>/dev/null || true
+        COMPOSE_FILE=$NEW_COMPOSE
+        log "Environment switched to $COMPOSE_FILE"
+    else
+        log "Already using $NEW_COMPOSE"
+    fi
+}
+
 # Interactive menu
 show_menu() {
     echo ""
@@ -118,9 +155,10 @@ show_menu() {
     echo "3) 🔧 Fix Docker"
     echo "4) 📋 Show logs"
     echo "5) 🧹 Deep cleanup"
-    echo "6) ❌ Exit"
+    echo "6) 🔄 Switch environment"
+    echo "7) ❌ Exit"
     echo ""
-    read -p "Choice [1-6]: " -n 1 -r
+    read -p "Choice [1-7]: " -n 1 -r
     echo
     
     case $REPLY in
@@ -134,7 +172,8 @@ show_menu() {
             docker volume prune -f
             log "Cleanup completed"
             ;;
-        6) exit 0 ;;
+        6) switch_environment ;;
+        7) exit 0 ;;
         *) warn "Invalid option" ;;
     esac
 }
@@ -148,8 +187,9 @@ else
         diagnose) diagnose ;;
         fix-docker) fix_docker ;;
         logs) docker compose -f $COMPOSE_FILE logs -f ;;
+        switch) switch_environment ;;
         *) 
-            echo "Usage: $0 [restart|diagnose|fix-docker|logs]"
+            echo "Usage: $0 [restart|diagnose|fix-docker|logs|switch]"
             exit 1
             ;;
     esac

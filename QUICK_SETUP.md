@@ -1,38 +1,62 @@
 # ⚡ Quick Setup Guide - Cosmos 2048
 
-## 🚀 One-Command Production Setup
+## 🚀 Two-Environment Setup
 
-For Ubuntu/Debian systems, you can deploy Cosmos 2048 in production with these simple commands:
+Cosmos 2048 now uses a simplified two-environment approach:
 
-### Option 1: Automated Installation (Recommended)
+- **🔄 Development**: For local development and testing
+- **🚀 Production**: For production deployment
 
+## 🛠️ Quick Installation
+
+### 1. Install Dependencies
 ```bash
 # Clone the repository
 git clone https://github.com/your-repo/cosmos-2048.git
 cd cosmos-2048
 
 # Install all dependencies (Docker, tools, firewall, etc.)
-./install-dependencies.sh
-
-# Start production environment
-./start-production.sh
+./setup-dependencies.sh
 ```
 
-### Option 2: Manual Docker Installation
+### 2. Choose Your Environment
 
+#### Development Environment
 ```bash
-# If you just need Docker installed
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
+# Start development environment
+docker compose -f docker-compose.dev.yml up -d
 
-# Log out and back in, then:
-./start-production.sh
+# Access development services
+# Frontend: http://localhost:3017
+# API: http://localhost:5017
+# MongoDB: localhost:27018
 ```
+
+#### Production Environment
+```bash
+# Deploy to production
+./deploy-production.sh
+
+# Access production application
+# Main app: http://localhost
+# Health check: http://localhost/health
+# API: http://localhost/api/*
+```
+
+## 🎯 Environment Comparison
+
+| Feature | Development | Production |
+|---------|-------------|------------|
+| **Ports** | 3017, 5017, 27018 | 80, 443 (Nginx proxy) |
+| **Build** | Development target | Production target |
+| **Volumes** | Source code mounted | Optimized bundles |
+| **Database** | Local MongoDB | Production MongoDB |
+| **Proxy** | None | Nginx reverse proxy |
+| **Use Case** | Development, testing | Production deployment |
 
 ## 🛠️ What Gets Installed
 
-### `install-dependencies.sh` includes:
+### `setup-dependencies.sh` includes:
 - ✅ **Docker Engine** (latest stable)
 - ✅ **Docker Compose** (plugin and standalone)
 - ✅ **Node.js 18** (optional, for development)
@@ -40,9 +64,8 @@ sudo usermod -aG docker $USER
 - ✅ **UFW Firewall** (configured for web traffic)
 - ✅ **System Updates** (security patches)
 
-### `start-production.sh` includes:
+### `deploy-production.sh` includes:
 - 🔍 **System Requirements Check** (RAM, disk, ports)
-- 🐳 **Automatic Docker Installation** (if missing)
 - ⚙️ **Environment Setup** (copies .env files)
 - 🏗️ **Image Building** (optimized production builds)
 - 🚀 **Service Startup** (Nginx proxy on port 80)
@@ -57,38 +80,39 @@ sudo usermod -aG docker $USER
 - **Network**: Internet connection for downloads
 
 ### Ports Used:
-- **80**: HTTP (Nginx proxy)
-- **443**: HTTPS (when SSL enabled)
-- **3017**: Frontend (internal)
-- **5017**: API (internal)
-- **27017**: MongoDB (internal)
+- **Development**: 3017 (Frontend), 5017 (API), 27018 (MongoDB)
+- **Production**: 80 (HTTP), 443 (HTTPS), internal services
 
 ## 🌐 Access Your Application
 
-Once deployment is complete:
+### Development:
+- 🎮 **Game**: http://localhost:3017
+- 📡 **API**: http://localhost:5017
+- 🗄️ **MongoDB**: localhost:27018
 
-- 🎮 **Game**: http://your-server-ip
-- 🔍 **Health Check**: http://your-server-ip/health
-- 📊 **API**: http://your-server-ip/api/*
+### Production:
+- 🎮 **Game**: http://localhost
+- 🔍 **Health Check**: http://localhost/health
+- 📊 **API**: http://localhost/api/*
 
 ## 🔧 Common Commands
 
 ```bash
-# Check service status
+# Development
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml logs -f
+
+# Production
+./deploy-production.sh
 docker compose -f docker-compose.prod.yml ps
-
-# View logs
 docker compose -f docker-compose.prod.yml logs -f
-
-# Stop services
 docker compose -f docker-compose.prod.yml down
 
-# Restart services
-docker compose -f docker-compose.prod.yml restart
-
-# Update application
-git pull origin main
-docker compose -f docker-compose.prod.yml up -d --build
+# Troubleshooting
+./quick-fix.sh diagnose
+./quick-fix.sh restart
+./quick-fix.sh switch
 ```
 
 ## 🛡️ Security Features
@@ -133,7 +157,7 @@ sudo usermod -aG docker $USER
 newgrp docker
 
 # Or use sudo temporarily
-sudo ./start-production.sh
+sudo ./deploy-production.sh
 ```
 
 ### If services won't start:
@@ -147,10 +171,20 @@ free -h
 docker system prune -a
 ```
 
+### Switch between environments:
+```bash
+# Use the interactive menu
+./quick-fix.sh
+
+# Or switch directly
+./quick-fix.sh switch
+```
+
 ## 📞 Support
 
 ### Logs to check:
-- **Application**: `docker compose -f docker-compose.prod.yml logs`
+- **Development**: `docker compose -f docker-compose.dev.yml logs`
+- **Production**: `docker compose -f docker-compose.prod.yml logs`
 - **System**: `journalctl -u docker`
 - **Nginx**: `docker compose -f docker-compose.prod.yml logs nginx`
 
@@ -163,6 +197,6 @@ docker system prune -a
 
 ## 🎉 That's It!
 
-Your Cosmos 2048 game should now be running on port 80. Enjoy the Web3 gaming experience with NFT rewards!
+Your Cosmos 2048 game can now run in either development or production mode with just two simple commands!
 
 **Need help?** Check the full [DEPLOYMENT.md](./DEPLOYMENT.md) guide for detailed configuration options.

@@ -11,55 +11,51 @@ A complete Web3 gaming experience that combines classic 2048 mechanics with the 
 📱 **Responsive Design**: Optimized experience for mobile and desktop  
 🎨 **Professional UI**: Smooth animations and modern design  
 
-## 🚀 Quick Start
+## �� Quick Start
 
-### ⚡ One-Command Production Deployment
+### ⚡ Two-Environment Setup
 
-For Ubuntu/Debian servers:
+Cosmos 2048 uses a simplified two-environment approach:
+
+- **🔄 Development**: For local development and testing
+- **🚀 Production**: For production deployment
+
+#### 🛠️ Development Environment
 
 ```bash
-# Clone and install everything
+# Clone and setup
 git clone https://github.com/your-repo/cosmos-2048.git
 cd cosmos-2048
 
-# Option 1: Full automated installation
-./install-dependencies.sh    # Installs Docker, tools, firewall
-./start-production.sh        # Deploys on port 80
+# Install dependencies
+./setup-dependencies.sh
 
-# Option 2: Quick production start (auto-installs Docker)
-./start-production.sh        # Handles Docker installation automatically
+# Start development environment
+docker compose -f docker-compose.dev.yml up -d
+
+# Access development services
+# Frontend: http://localhost:3017
+# API: http://localhost:5017
+# MongoDB: localhost:27018
 ```
 
-### 🛠️ Development Setup
+#### 🚀 Production Environment
 
-1. **Setup environment files:**
-   ```bash
-   cp apps/api/.env.example apps/api/.env
-   cp apps/web/.env.example apps/web/.env
-   ```
+```bash
+# Deploy to production
+./deploy-production.sh
 
-2. **Start development environment:**
-   ```bash
-   docker compose up -d --build
-   ```
-
-3. **Access the application:**
-   
-   **Development:**
-   - Frontend: http://localhost:3017
-   - API Health: http://localhost:5017/health
-   - MongoDB: localhost:27017
-   
-   **Production (with Nginx Proxy):**
-   - 🌐 **Application**: http://localhost (port 80)
-   - 🔍 **Health Check**: http://localhost/health
-   - 📊 **API**: http://localhost/api/*
+# Access production application
+# Main app: http://localhost
+# Health check: http://localhost/health
+# API: http://localhost/api/*
+```
 
 ### 🔍 Verify Installation
 
 ```bash
 # Check if everything is properly installed and running
-./verify-installation.sh
+./quick-fix.sh diagnose
 ```
 
 ### 🔐 Root User Support
@@ -68,29 +64,30 @@ All scripts support execution as root user with security warnings:
 
 ```bash
 # Scripts will prompt for confirmation when run as root
-sudo ./start-production.sh  # Shows security warning
-./start-production.sh       # If already root
+sudo ./deploy-production.sh  # Shows security warning
+./deploy-production.sh       # If already root
 
 # For security best practices, use regular user:
 su - username
-./start-production.sh       # Recommended approach
+./deploy-production.sh       # Recommended approach
 ```
 
 See [ROOT_USER_GUIDE.md](./ROOT_USER_GUIDE.md) for complete security guidelines.
 
 ## 🏗️ Architecture
 
-### Development
+### Development Environment
 - **Frontend**: Next.js 14 + Tailwind CSS + Framer Motion (port 3017)
 - **Backend**: Express.js + MongoDB + JWT Auth (port 5017)
-- **Database**: MongoDB (port 27017)
+- **Database**: MongoDB (port 27018)
+- **Features**: Source code mounting, hot reloading, development builds
 
-### Production
+### Production Environment
 - **Reverse Proxy**: Nginx (port 80/443)
-- **Frontend**: Next.js Standalone Build (port 3017 internal)
+- **Frontend**: Next.js Standalone Production Build (port 3017 internal)
 - **Backend**: Express.js Production (port 5017 internal)
 - **Database**: MongoDB with persistent volumes (port 27017 internal)
-- **Caching**: Redis for performance (port 6379 internal)
+- **Features**: Production builds, health checks, SSL ready, optimized performance
 
 ### Blockchain
 - **Network**: Stargaze Mainnet for NFT minting

@@ -1,0 +1,68 @@
+services:
+  # MongoDB for development
+  mongodb:
+    image: mongo:7
+    container_name: cosmos2048-mongodb-dev
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=cosmos2048_dev
+    volumes:
+      - mongodb_dev_data:/data/db
+    networks:
+      - cosmos2048-dev-network
+    restart: unless-stopped
+
+  # Backend API for development
+  api:
+    build: 
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: cosmos2048-api-dev
+    ports:
+      - "5017:5017"
+    environment:
+      - NODE_ENV=development
+      - PORT=5017
+      - MONGODB_URI=mongodb://mongodb:27017/cosmos2048_dev
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-key}
+    depends_on:
+      - mongodb
+    networks:
+      - cosmos2048-dev-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+
+  # Frontend Next.js for development
+  web:
+    build: 
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: cosmos2048-web-dev
+    ports:
+      - "3017:3017"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:5017
+    depends_on:
+      - api
+    networks:
+      - cosmos2048-dev-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+
+networks:
+  cosmos2048-dev-network:
+    driver: bridge
+    name: cosmos2048-dev-network
+
+volumes:
+  mongodb_dev_data:
+    name: cosmos2048-mongodb-dev-data

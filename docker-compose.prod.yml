@@ -1,59 +1,31 @@
 services:
-  # Nginx Reverse Proxy (Production)
-  nginx:
-    image: nginx:alpine
-    container_name: cosmos2048-nginx-prod
-    ports:
-      - "80:80" 
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/maintenance.html:/usr/share/nginx/html/maintenance.html:ro
-      # Volume for SSL certificates (optional)
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - web
-      - api
-    networks:
-      - cosmos2048-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Frontend Next.js (Production Build)
-  web:
-    build: 
-      context: ./apps/web
-      dockerfile: Dockerfile
-      target: production
-    container_name: cosmos2048-frontend-prod
+  # MongoDB for production
+  mongodb:
+    image: mongo:7
+    container_name: cosmos2048-mongodb-prod
     expose:
-      - "3017"
+      - "27017"
     environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://cosmos2048.ddns.net/api
+      - MONGO_INITDB_DATABASE=cosmos2048_prod
     volumes:
-      # Volume for persistent cache Next.js
-      - nextjs_cache:/app/.next/cache
-    depends_on:
-      - api
+      - mongodb_prod_data:/data/db
     networks:
-      - cosmos2048-network
+      - cosmos2048-prod-network
     restart: unless-stopped
+    # Production MongoDB settings
+    command: mongod --wiredTigerCacheSizeGB 0.5 --quiet
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3017/"]
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")' || mongo --eval 'db.adminCommand(\"ping\")'"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Backend API (Production)
+  # Backend API for production
   api:
     build: 
       context: ./apps/api
       dockerfile: Dockerfile
+      target: production
     container_name: cosmos2048-api-prod
     expose:
       - "5017"
@@ -66,64 +38,71 @@ services:
       mongodb:
         condition: service_healthy
     networks:
-      - cosmos2048-network
+      - cosmos2048-prod-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5017/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--timeout=10", "http://localhost:5017/health"]
       interval: 30s
-      timeout: 10s
-      retries: 3
+      timeout: 15s
+      retries: 5
+      start_period: 60s
 
-  # MongoDB (Production with Persistence)
-  mongodb:
-    image: mongo:7
-    container_name: cosmos2048-mongodb-prod
+  # Frontend Next.js for production
+  web:
+    build: 
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: production
+    container_name: cosmos2048-web-prod
     expose:
-      - "27017"
+      - "3017"
     environment:
-      - MONGO_INITDB_DATABASE=cosmos2048_prod
-    volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost/api
+    depends_on:
+      api:
+        condition: service_healthy
     networks:
-      - cosmos2048-network
+      - cosmos2048-prod-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--timeout=15", "http://localhost:3017/"]
+      interval: 45s
+      timeout: 20s
+      retries: 8
+      start_period: 120s
 
-  # Redis for caching (optional for future optimizations)
-  redis:
-    image: redis:7-alpine
-    container_name: cosmos2048-redis-prod
-    expose:
-      - "6379"
+  # Nginx Reverse Proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: cosmos2048-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
-      - redis_data:/data
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/maintenance.html:/usr/share/nginx/html/maintenance.html:ro
+      # Volume for SSL certificates (optional)
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
-      - cosmos2048-network
+      - cosmos2048-prod-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 10s
       retries: 3
-    command: redis-server --save 20 1 --loglevel warning
 
 networks:
-  cosmos2048-network:
+  cosmos2048-prod-network:
     driver: bridge
     name: cosmos2048-prod-network
 
 volumes:
-  # Persistent volumes for production
-  mongodb_data:
-    name: cosmos2048-mongodb-data
-  mongodb_config:
-    name: cosmos2048-mongodb-config
-  redis_data:
-    name: cosmos2048-redis-data
-  nextjs_cache:
-    name: cosmos2048-nextjs-cache
+  mongodb_prod_data:
+    name: cosmos2048-mongodb-prod-data

@@ -1,8 +1,11 @@
 # 🚀 Production Deployment Guide - Cosmos 2048
 
-## 🏗️ Production Proxy Configuration
+## 🏗️ Two-Environment Architecture
 
-The production setup uses **Nginx as a reverse proxy** to serve the application on standard port 80, while internal services remain on their dedicated ports.
+Cosmos 2048 uses a simplified two-environment approach:
+
+- **🔄 Development**: `docker-compose.dev.yml` - For local development and testing
+- **🚀 Production**: `docker-compose.prod.yml` - For production deployment with Nginx proxy
 
 ### 📋 Production Architecture
 
@@ -17,13 +20,29 @@ Internet (port 80/443)
 
 ## 🛠️ Quick Setup
 
-### 1. Automatic Startup
+### 1. Development Environment
 ```bash
-# Run the startup script
-./start-production.sh
+# Start development environment
+docker compose -f docker-compose.dev.yml up -d
+
+# Access development services
+# Frontend: http://localhost:3017
+# API: http://localhost:5017
+# MongoDB: localhost:27018
 ```
 
-### 2. Manual Startup
+### 2. Production Environment
+```bash
+# Deploy to production
+./deploy-production.sh
+
+# Access production application
+# Main app: http://localhost
+# Health check: http://localhost/health
+# API: http://localhost/api/*
+```
+
+### 3. Manual Production Setup
 ```bash
 # Copy environment files
 cp apps/api/.env.example apps/api/.env
@@ -35,11 +54,6 @@ docker compose -f docker-compose.prod.yml up -d --build
 # Verify status
 docker compose -f docker-compose.prod.yml ps
 ```
-
-### 3. Application Access
-- **Frontend**: http://localhost
-- **API Health**: http://localhost/health
-- **API Endpoints**: http://localhost/api/*
 
 ## 🔧 SSL Configuration (Optional)
 
@@ -64,7 +78,7 @@ cp nginx/nginx-ssl.conf nginx/nginx.conf
 docker compose -f docker-compose.prod.yml restart nginx
 ```
 
-## 🎛️ Production Environment Variables
+## 🎛️ Environment Variables
 
 ### Backend (.env)
 ```bash
@@ -201,11 +215,8 @@ git clone https://github.com/your-repo/cosmos-2048.git
 cd cosmos-2048
 
 # Setup production
-cp .env.prod.example .env.prod
-# Modify variables for production
-
-# Start
-./start-production.sh
+./setup-dependencies.sh
+./deploy-production.sh
 ```
 
 ### Domain Configuration
@@ -261,6 +272,16 @@ docker compose -f docker-compose.prod.yml down -v
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+#### Switch between environments
+```bash
+# Use quick-fix script
+./quick-fix.sh switch
+
+# Or manually
+docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.dev.yml up -d
+```
+
 ## 📈 Performance Tuning
 
 ### Nginx Optimizations
@@ -294,4 +315,28 @@ docker compose -f docker-compose.prod.yml up -d
 - [ ] ✅ Security headers active
 - [ ] ✅ Performance testing completed
 
-**🌟 Your Cosmos 2048 is ready for launch!**
+---
+
+## 🔄 Environment Switching
+
+### Quick Environment Switch
+```bash
+# Use the interactive menu
+./quick-fix.sh
+
+# Or switch directly
+./quick-fix.sh switch
+```
+
+### Manual Environment Management
+```bash
+# Development
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml down
+
+# Production
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml down
+```
+
+**🌟 Your Cosmos 2048 is ready for launch with simple environment management!**
