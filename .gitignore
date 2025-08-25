@@ -146,6 +146,7 @@ docker-compose.override.yml
 docker-compose.*.yml
 !docker-compose.yml
 !docker-compose.prod.yml
+!docker-compose.low-memory.yml
 
 # Docker volumes
 docker-volumes/
